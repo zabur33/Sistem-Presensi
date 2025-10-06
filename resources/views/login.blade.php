@@ -18,22 +18,28 @@
     </div>
     <div class="right">
         <form class="login-box" method="POST" action="/login">
+            @csrf
             <div class="logo">
                 <!-- Logo SVG atau gambar -->
                 <img src="{{ asset('images/logo.jpg') }}" alt="Life Media Logo">
             </div>
             <div class="desc">Jika belum punya akun hubungi Admin</div>
             <div class="input-group">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a7.5 7.5 0 0 1 13 0"/></svg>
-                <input type="text" name="username" placeholder="Enter username..." required>
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M22 6l-10 7L2 6"/></svg>
+                <input type="email" name="email" placeholder="Enter email" value="{{ old('email') }}" required>
             </div>
             <div class="input-group">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                <input type="password" name="password" placeholder="Enter password..." required>
+                <input type="password" name="password" placeholder="Enter password" required>
             </div>
+            @if ($errors->any())
+                <div class="error" style="color:#e63946; margin-bottom:10px;">
+                    {{ $errors->first() }}
+                </div>
+            @endif
             <button class="login-btn" type="submit">LOGIN</button>
         </form>
     </div>
 </div>
 </body>
-</html> 
+</html>
