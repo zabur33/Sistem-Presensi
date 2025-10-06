@@ -22,8 +22,7 @@
                 <!-- Logo SVG atau gambar -->
                 <img src="{{ asset('images/logo.jpg') }}" alt="Life Media Logo">
             </div>
-            <!-- <div class="desc">Jika belum punya akun hubungi Admin</div> -->
-             <div class="desc">woyyyyyyyyyy</div>
+            <div class="desc">Jika belum punya akun hubungi Admin</div>            
             <div class="input-group">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a7.5 7.5 0 0 1 13 0"/></svg>
                 <input type="text" name="username" placeholder="Enter username..." required>
