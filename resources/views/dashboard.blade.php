@@ -37,8 +37,13 @@
             </div>
         </div>
         <div class="logout">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
-            Logout
+            <form method="POST" action="{{ route('logout') }}" style="display:flex;align-items:center;gap:8px;">
+                @csrf
+                <button type="submit" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:inherit;cursor:pointer;">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
+                    Logout
+                </button>
+            </form>
         </div>
     </div>
     <div class="content-area">
