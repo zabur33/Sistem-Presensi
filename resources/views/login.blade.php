@@ -23,7 +23,7 @@
                 <!-- Logo SVG atau gambar -->
                 <img src="{{ asset('images/logo.jpg') }}" alt="Life Media Logo">
             </div>
-            <div class="desc">hanya untuk admin</div>            
+            <div class="desc">Jika belum punya akun hubungi Admin</div>
             <div class="input-group">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M22 6l-10 7L2 6"/></svg>
                 <input type="email" name="email" placeholder="Enter email" value="{{ old('email') }}" required>
