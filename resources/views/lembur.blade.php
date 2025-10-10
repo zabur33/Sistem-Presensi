@@ -9,6 +9,18 @@
         @vite(['resources/css/app.css', 'resources/css/dashboard.css', 'resources/js/app.js'])
     @endif
     <link rel="stylesheet" href="{{ asset('css/lembur.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/presensi-luar.css') }}">
+    <style>
+        /* Page-specific tweaks so tampilan rapi di halaman lembur */
+        .camera-card{ padding:12px; }
+        .camera-area{ padding:20px 16px; }
+        .camera-icon svg{ width:40px; height:40px; }
+        .camera-preview video{ height:220px; }
+        .camera-text{ font-size:1rem; }
+        .retake-btn{ margin-top:10px; }
+        /* Pastikan svg tidak membesar di luar container */
+        .camera-section svg{ max-width:100%; max-height:100%; }
+    </style>
 </head>
 <body>
 <div class="main-container">
@@ -79,38 +91,92 @@
                         </div>
                     </div>
 
-                    <!-- Upload Foto Wajah -->
+                    <!-- Foto Wajah (Kamera) -->
                     <div class="form-group">
-                        <label>Upload Foto Wajah</label>
-                        <div class="upload-area" id="uploadWajah">
-                            <div class="upload-icon">
-                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                                    <path d="M21 15l-5-5L5 21"/>
-                                </svg>
+                        <label>Foto Wajah</label>
+                        <div class="camera-section">
+                            <div class="camera-card">
+                                <!-- Preview Kamera -->
+                                <div class="camera-preview" id="cameraPreview-face" style="display:none;">
+                                    <video id="cameraVideo-face" autoplay playsinline></video>
+                                    <div class="camera-overlay">
+                                        <div class="camera-controls">
+                                            <button class="capture-btn" onclick="capturePhoto('face')" type="button" title="Ambil Foto">
+                                                <svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+                                            </button>
+                                            <button class="close-camera-btn" onclick="stopCamera('face')" type="button" title="Tutup Kamera">
+                                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <canvas id="captureCanvas-face" style="display:none;"></canvas>
+                                </div>
+                                <!-- Area Mulai Kamera -->
+                                <div class="camera-area" id="cameraArea-face">
+                                    <div class="camera-icon">
+                                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1 2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                    </div>
+                                    <p class="camera-text">Ambil foto wajah langsung dari kamera</p>
+                                </div>
+                                <button class="camera-btn" id="cameraBtn-face" onclick="startCamera('face')" type="button">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1 2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                    Buka Kamera
+                                </button>
                             </div>
-                            <p>Pilih atau drag file foto disini</p>
-                            <input type="file" id="fotoWajah" name="foto_wajah" accept="image/*" hidden>
+                            <!-- Preview Foto -->
+                            <div class="photo-preview" id="photoPreview-face" style="display:none;">
+                                <img id="previewImage-face" src="" alt="Preview">
+                                <button class="retake-btn" onclick="startCamera('face')" type="button">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                                    Ambil Ulang
+                                </button>
+                            </div>
                         </div>
-                        <button type="button" class="upload-btn" onclick="document.getElementById('fotoWajah').click()">Upload</button>
+                        <input type="hidden" id="fotoData-face" name="foto_wajah_data">
                     </div>
 
-                    <!-- Upload Foto Pendukung -->
+                    <!-- Foto Pendukung (Kamera) -->
                     <div class="form-group">
-                        <label>Upload Foto Pendukung</label>
-                        <div class="upload-area" id="uploadPendukung">
-                            <div class="upload-icon">
-                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                                    <path d="M21 15l-5-5L5 21"/>
-                                </svg>
+                        <label>Foto Pendukung</label>
+                        <div class="camera-section">
+                            <div class="camera-card">
+                                <!-- Preview Kamera -->
+                                <div class="camera-preview" id="cameraPreview-support" style="display:none;">
+                                    <video id="cameraVideo-support" autoplay playsinline></video>
+                                    <div class="camera-overlay">
+                                        <div class="camera-controls">
+                                            <button class="capture-btn" onclick="capturePhoto('support')" type="button" title="Ambil Foto">
+                                                <svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+                                            </button>
+                                            <button class="close-camera-btn" onclick="stopCamera('support')" type="button" title="Tutup Kamera">
+                                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <canvas id="captureCanvas-support" style="display:none;"></canvas>
+                                </div>
+                                <!-- Area Mulai Kamera -->
+                                <div class="camera-area" id="cameraArea-support">
+                                    <div class="camera-icon">
+                                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1 2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                    </div>
+                                    <p class="camera-text">Ambil foto pendukung langsung dari kamera</p>
+                                </div>
+                                <button class="camera-btn" id="cameraBtn-support" onclick="startCamera('support')" type="button">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1 2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                    Buka Kamera
+                                </button>
                             </div>
-                            <p>Pilih atau drag file foto disini</p>
-                            <input type="file" id="fotoPendukung" name="foto_pendukung" accept="image/*" hidden>
+                            <!-- Preview Foto -->
+                            <div class="photo-preview" id="photoPreview-support" style="display:none;">
+                                <img id="previewImage-support" src="" alt="Preview">
+                                <button class="retake-btn" onclick="startCamera('support')" type="button">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                                    Ambil Ulang
+                                </button>
+                            </div>
                         </div>
-                        <button type="button" class="upload-btn" onclick="document.getElementById('fotoPendukung').click()">Upload</button>
+                        <input type="hidden" id="fotoData-support" name="foto_pendukung_data">
                     </div>
 
                     <!-- Deskripsi Kegiatan -->
@@ -168,63 +234,65 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// File upload handlers
-document.getElementById('fotoWajah').addEventListener('change', function(e) {
-    handleFileUpload(e, 'uploadWajah');
-});
+// Camera logic (dual: face & support)
+let cameraStreams = { face: null, support: null };
 
-document.getElementById('fotoPendukung').addEventListener('change', function(e) {
-    handleFileUpload(e, 'uploadPendukung');
-});
+function startCamera(key) {
+    const preview = document.getElementById(`cameraPreview-${key}`);
+    const area = document.getElementById(`cameraArea-${key}`);
+    const video = document.getElementById(`cameraVideo-${key}`);
 
-function handleFileUpload(event, uploadAreaId) {
-    const file = event.target.files[0];
-    const uploadArea = document.getElementById(uploadAreaId);
+    area.style.display = 'none';
+    preview.style.display = 'block';
 
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            uploadArea.innerHTML = `
-                <div class="uploaded-file">
-                    <img src="${e.target.result}" alt="Uploaded image" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
-                    <p>${file.name}</p>
-                </div>
-            `;
-            uploadArea.classList.add('has-file');
-        };
-        reader.readAsDataURL(file);
-    }
+    const constraints = {
+        video: {
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 30, min: 15 }
+        }
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints)
+        .then(stream => {
+            cameraStreams[key] = stream;
+            video.srcObject = stream;
+        })
+        .catch(() => {
+            alert('Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.');
+            area.style.display = 'block';
+            preview.style.display = 'none';
+        });
 }
 
-// Drag and drop functionality
-document.querySelectorAll('.upload-area').forEach(area => {
-    area.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        this.classList.add('drag-over');
-    });
+function stopCamera(key) {
+    const stream = cameraStreams[key];
+    if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        cameraStreams[key] = null;
+    }
+    document.getElementById(`cameraArea-${key}`).style.display = 'block';
+    document.getElementById(`cameraPreview-${key}`).style.display = 'none';
+}
 
-    area.addEventListener('dragleave', function(e) {
-        e.preventDefault();
-        this.classList.remove('drag-over');
-    });
+function capturePhoto(key) {
+    const video = document.getElementById(`cameraVideo-${key}`);
+    const canvas = document.getElementById(`captureCanvas-${key}`);
+    const ctx = canvas.getContext('2d');
 
-    area.addEventListener('drop', function(e) {
-        e.preventDefault();
-        this.classList.remove('drag-over');
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            const fileInput = this.parentNode.querySelector('input[type="file"]');
-            fileInput.files = files;
-            fileInput.dispatchEvent(new Event('change'));
-        }
-    });
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    document.getElementById(`previewImage-${key}`).src = dataUrl;
+    document.getElementById(`photoPreview-${key}`).style.display = 'block';
+    document.getElementById(`fotoData-${key}`).value = dataUrl;
 
-    area.addEventListener('click', function() {
-        const fileInput = this.parentNode.querySelector('input[type="file"]');
-        fileInput.click();
-    });
-});
+    // stop camera after capture
+    stopCamera(key);
+}
 
 // Form submission
 document.getElementById('lemburForm').addEventListener('submit', function(e) {
@@ -235,9 +303,21 @@ document.getElementById('lemburForm').addEventListener('submit', function(e) {
     const alamat = document.getElementById('alamat').value;
     const jam = document.getElementById('jam').value;
     const deskripsi = document.getElementById('deskripsi').value;
+    const faceData = document.getElementById('fotoData-face').value;
+    const supportData = document.getElementById('fotoData-support').value;
 
     if (!nama || !alamat || !jam || !deskripsi) {
         alert('Mohon lengkapi semua field yang diperlukan');
+        return;
+    }
+
+    if (!faceData) {
+        alert('Mohon ambil foto wajah terlebih dahulu.');
+        return;
+    }
+
+    if (!supportData) {
+        alert('Mohon ambil foto pendukung terlebih dahulu.');
         return;
     }
 
@@ -248,18 +328,12 @@ document.getElementById('lemburForm').addEventListener('submit', function(e) {
 // Reset form
 function resetForm() {
     document.getElementById('lemburForm').reset();
-    document.querySelectorAll('.upload-area').forEach(area => {
-        area.classList.remove('has-file');
-        area.innerHTML = `
-            <div class="upload-icon">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <path d="M21 15l-5-5L5 21"/>
-                </svg>
-            </div>
-            <p>Pilih atau drag file foto disini</p>
-        `;
+    ['face','support'].forEach(key => {
+        document.getElementById(`fotoData-${key}`).value = '';
+        document.getElementById(`photoPreview-${key}`).style.display = 'none';
+        stopCamera(key);
+        document.getElementById(`cameraArea-${key}`).style.display = 'block';
+        document.getElementById(`cameraPreview-${key}`).style.display = 'none';
     });
 }
 
