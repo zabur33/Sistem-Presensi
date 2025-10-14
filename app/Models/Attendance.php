@@ -11,7 +11,7 @@ class Attendance extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'date', 'time_in', 'time_out', 'status', 'location_type', 'verification',
+        'user_id', 'date', 'time_in', 'time_out', 'status', 'location_type', 'location_text', 'photo_path', 'activity_text', 'verification',
     ];
 
     protected $casts = [

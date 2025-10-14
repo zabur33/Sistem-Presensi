@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Presensi Luar Kantor - Life Media</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/css/dashboard.css', 'resources/js/app.js'])
@@ -39,8 +40,13 @@
             </div>
         </div>
         <div class="logout">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
-            Logout
+            <form method="POST" action="{{ route('logout') }}" style="display:flex;align-items:center;gap:8px;">
+                @csrf
+                <button type="submit" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:inherit;cursor:pointer;">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
+                    Logout
+                </button>
+            </form>
         </div>
     </div>
     <div class="content-area">
@@ -273,6 +279,37 @@
 </div>
 
 <script>
+// Fetch helpers
+function getCsrfToken() {
+    const el = document.querySelector('meta[name="csrf-token"]');
+    return el ? el.getAttribute('content') : '';
+}
+
+// Multipart upload helper
+async function postForm(url, formData) {
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': getCsrfToken()
+        },
+        body: formData
+    });
+    if (!res.ok) throw new Error('Upload failed');
+    return res.json().catch(() => ({}));
+}
+
+async function postJSON(url, data) {
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': getCsrfToken()
+        },
+        body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Request failed');
+    return res.json().catch(() => ({}));
+}
 let attendanceState = {
     kedatangan: false,
     istirahat: false,
@@ -290,14 +327,124 @@ let attendanceTimes = {
 let currentLocation = null;
 let uploadedPhoto = null;
 let activityDescription = '';
+let proofUploaded = false;
+
+function tryUploadProofIfReady() {
+    if (proofUploaded) return;
+    if (!uploadedPhoto || !currentLocation) return;
+    const fd = new FormData();
+    // Name the file
+    const file = uploadedPhoto instanceof Blob ? new File([uploadedPhoto], `presensi_${Date.now()}.jpg`, { type: uploadedPhoto.type || 'image/jpeg' }) : uploadedPhoto;
+    fd.append('photo', file);
+    fd.append('location_text', currentLocation);
+    fd.append('location_type', 'luar_kantor');
+    if (activityDescription && activityDescription.trim().length > 0) {
+        fd.append('activity_text', activityDescription.trim());
+    }
+    postForm('{{ route('attendance.proof') }}', fd)
+        .then(() => { proofUploaded = true; })
+        .catch(() => { /* silently ignore, user can retry by retake */ });
+}
 
 function getCurrentTime() {
     const now = new Date();
-    return now.toLocaleTimeString('id-ID', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-    });
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    return `${hh}:${mm}:${ss}`;
+}
+
+// Live time updaters per card
+const liveTimers = {};
+function startLiveTime(displayId) {
+    if (liveTimers[displayId]) clearInterval(liveTimers[displayId]);
+    const el = document.getElementById(displayId);
+    if (!el) return;
+    el.textContent = getCurrentTime();
+    liveTimers[displayId] = setInterval(() => {
+        el.textContent = getCurrentTime();
+    }, 1000);
+}
+
+// Break (Istirahat) logic with 60-minute quota (resumable)
+const BREAK_QUOTA_MS = 60 * 60 * 1000; // 60 minutes
+let breakUsedMs = 0;
+let breakStartAt = null; // timestamp if running
+let breakInterval = null;
+
+function formatMMSS(ms) {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const mm = String(Math.floor(totalSec / 60)).padStart(2, '0');
+    const ss = String(totalSec % 60).padStart(2, '0');
+    return `${mm}:${ss}`;
+}
+
+function updateBreakDisplays(remainingMs, elapsedMs) {
+    // In luar-kantor: 'istirahat-time' shows remaining, 'kembali-time' shows elapsed of current session
+    const remainEl = document.getElementById('istirahat-time');
+    const elapsedEl = document.getElementById('kembali-time');
+    if (remainEl) remainEl.textContent = formatMMSS(remainingMs);
+    if (elapsedEl) elapsedEl.textContent = formatMMSS(elapsedMs);
+}
+
+function startBreak() {
+    const remainingAllowance = BREAK_QUOTA_MS - breakUsedMs;
+    if (remainingAllowance <= 0) {
+        alert('Waktu istirahat 60 menit sudah habis.');
+        return;
+    }
+    // UI: disable Istirahat while running, enable Kembali
+    const btnIstirahat = document.getElementById('btn-istirahat');
+    const btnKembali = document.getElementById('btn-kembali');
+    if (btnIstirahat) btnIstirahat.disabled = true;
+    if (btnKembali) btnKembali.disabled = false;
+
+    breakStartAt = Date.now();
+    savePresensiState();
+    if (breakInterval) clearInterval(breakInterval);
+    breakInterval = setInterval(() => {
+        const now = Date.now();
+        const sessionElapsed = now - breakStartAt;
+        const totalElapsed = breakUsedMs + sessionElapsed;
+        const remaining = BREAK_QUOTA_MS - totalElapsed;
+        updateBreakDisplays(remaining, sessionElapsed);
+    }, 1000);
+    updateBreakDisplays(remainingAllowance, 0);
+}
+
+function finishBreak() {
+    if (!breakStartAt) return;
+    const now = Date.now();
+    const sessionElapsed = now - breakStartAt;
+    breakUsedMs += sessionElapsed;
+    breakStartAt = null;
+    if (breakInterval) { clearInterval(breakInterval); breakInterval = null; }
+
+    const remaining = BREAK_QUOTA_MS - breakUsedMs;
+    updateBreakDisplays(Math.max(0, remaining), 0);
+
+    // Late detection on return card's badge (kembali-status)
+    const returnStatus = document.getElementById('kembali-status');
+    if (breakUsedMs > BREAK_QUOTA_MS && returnStatus) {
+        returnStatus.textContent = 'Terlambat';
+        returnStatus.classList.add('completed');
+    }
+
+    // Re-enable Istirahat if still has remaining quota
+    const btnIstirahat = document.getElementById('btn-istirahat');
+    const btnKembali = document.getElementById('btn-kembali');
+    if (btnKembali) btnKembali.disabled = true;
+    if (btnIstirahat) btnIstirahat.disabled = remaining <= 0;
+
+    // Allow kepulangan after at least one return
+    const btnKepulangan = document.getElementById('btn-kepulangan');
+    if (btnKepulangan) btnKepulangan.disabled = false;
+    savePresensiState();
+}
+
+function stopAllTimers() {
+    Object.keys(liveTimers).forEach(id => clearInterval(liveTimers[id]));
+    if (breakInterval) { clearInterval(breakInterval); breakInterval = null; }
 }
 
 function handlePresensi(type) {
@@ -312,7 +459,36 @@ function handlePresensi(type) {
     const statusBadge = document.getElementById(`${type}-status`);
     const timeDisplay = document.getElementById(`${type}-time`);
     
-    // Record attendance
+    // Custom flows
+    if (type === 'istirahat') { // start break
+        startBreak();
+        const statusBadge = document.getElementById('istirahat-status');
+        if (statusBadge) statusBadge.textContent = 'Berjalan';
+        return;
+    }
+
+    if (type === 'kembali') { // finish break
+        finishBreak();
+        const timeDisplay = document.getElementById('kembali-time');
+        if (timeDisplay) timeDisplay.textContent = currentTime;
+        return;
+    }
+
+    if (type === 'kepulangan') {
+        // sync checkout
+        postJSON('{{ route('attendance.checkout') }}', { location_type: 'luar_kantor', client_time: currentTime }).catch(() => {});
+        stopAllTimers();
+        const timeDisplay = document.getElementById('kepulangan-time');
+        if (timeDisplay) timeDisplay.textContent = currentTime;
+        ['btn-kedatangan','btn-istirahat','btn-kembali','btn-kepulangan'].forEach(id=>{ const b=document.getElementById(id); if(b) b.disabled=true; });
+        attendanceState[type] = true;
+        attendanceTimes[type] = currentTime;
+        savePresensiState();
+        showSuccessModal(type, currentTime);
+        return;
+    }
+
+    // Record attendance (kedatangan)
     attendanceState[type] = true;
     attendanceTimes[type] = currentTime;
     
@@ -329,12 +505,92 @@ function handlePresensi(type) {
     statusBadge.textContent = 'Presensi';
     statusBadge.classList.add('completed');
     timeDisplay.textContent = currentTime;
+    // start ticking live for this card
+    startLiveTime(`${type}-time`);
     
     // Enable next button in sequence
     enableNextButton(type);
     
+    // Sync check-in when kedatangan
+    if (type === 'kedatangan') {
+        postJSON('{{ route('attendance.checkin') }}', { location_type: 'luar_kantor', client_time: currentTime }).catch(() => {});
+    }
+
     // Show success modal
     showSuccessModal(type, currentTime);
+
+    // Persist
+    savePresensiState();
+}
+
+// ===== Persistence (localStorage) =====
+function savePresensiState() {
+    const state = {
+        attendanceState,
+        attendanceTimes,
+        breakUsedMs,
+        breakStartAt,
+    };
+    localStorage.setItem('presensi-luar-state', JSON.stringify(state));
+}
+
+function loadPresensiState() {
+    try {
+        const raw = localStorage.getItem('presensi-luar-state');
+        if (!raw) return;
+        const s = JSON.parse(raw);
+        if (s.attendanceState) attendanceState = s.attendanceState;
+        if (s.attendanceTimes) attendanceTimes = s.attendanceTimes;
+        if (typeof s.breakUsedMs === 'number') breakUsedMs = s.breakUsedMs;
+        if (s.breakStartAt) breakStartAt = s.breakStartAt;
+
+        // Restore times/buttons
+        ['kedatangan','istirahat','kembali','kepulangan'].forEach(type => {
+            const timeVal = attendanceTimes[type];
+            const el = document.getElementById(`${type}-time`);
+            const btn = document.getElementById(`btn-${type}`);
+            const status = document.getElementById(`${type}-status`);
+            if (timeVal && el) el.textContent = timeVal;
+            if (attendanceState[type] && btn) {
+                btn.disabled = true;
+                btn.classList.add('completed');
+                btn.innerHTML = `\n        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">\n            <path d="M9 12l2 2 4-4"/>\n        </svg>\n        Selesai\n    `;
+                if (status) status.classList.add('completed');
+            }
+        });
+
+        const remaining = Math.max(0, BREAK_QUOTA_MS - breakUsedMs - (breakStartAt ? (Date.now() - breakStartAt) : 0));
+        const sessionElapsed = breakStartAt ? (Date.now() - breakStartAt) : 0;
+        updateBreakDisplays(remaining, sessionElapsed);
+
+        // Buttons availability
+        if (!attendanceState.kedatangan) {
+            document.getElementById('btn-istirahat').disabled = true;
+            document.getElementById('btn-kembali').disabled = true;
+            document.getElementById('btn-kepulangan').disabled = true;
+        } else {
+            const btnIst = document.getElementById('btn-istirahat');
+            if (btnIst) btnIst.disabled = breakStartAt ? true : (remaining <= 0);
+            const btnKmb = document.getElementById('btn-kembali');
+            if (btnKmb) btnKmb.disabled = !breakStartAt;
+        }
+
+        // Resume timers
+        if (attendanceState.kedatangan && !attendanceState.kepulangan) {
+            startLiveTime('kedatangan-time');
+        }
+        if (breakStartAt) {
+            if (typeof breakStartAt === 'string') breakStartAt = parseInt(breakStartAt, 10);
+            if (breakInterval) clearInterval(breakInterval);
+            breakInterval = setInterval(() => {
+                const now = Date.now();
+                const elapsed = now - breakStartAt;
+                const total = breakUsedMs + elapsed;
+                const rem = BREAK_QUOTA_MS - total;
+                updateBreakDisplays(rem, elapsed);
+            }, 1000);
+        }
+    } catch {}
 }
 
 function enableNextButton(currentType) {
@@ -491,6 +747,7 @@ function capturePhoto() {
             uploadedPhoto = blob;
             getCurrentLocation(); // Auto-detect location when photo is taken
             enableAttendanceButtons(); // Enable attendance buttons after photo is taken
+            tryUploadProofIfReady();
             
             // Stop camera and hide preview
             stopCamera();
@@ -550,12 +807,14 @@ function getCurrentLocation() {
                         currentLocation = address;
                         locationText.textContent = address;
                         locationInput.value = address;
+                        tryUploadProofIfReady();
                     })
                     .catch(error => {
                         const fallbackLocation = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
                         currentLocation = fallbackLocation;
                         locationText.textContent = fallbackLocation;
                         locationInput.value = fallbackLocation;
+                        tryUploadProofIfReady();
                     });
             },
             function(error) {
@@ -593,6 +852,12 @@ function saveActivity() {
     }
     
     activityDescription = activity;
+    // Push metadata-only update to backend (no photo required)
+    const fd = new FormData();
+    fd.append('location_type', 'luar_kantor');
+    fd.append('activity_text', activityDescription.trim());
+    if (currentLocation) fd.append('location_text', currentLocation);
+    postForm('{{ route('attendance.proof') }}', fd).catch(()=>{});
     alert('Keterangan kegiatan berhasil disimpan.');
 }
 
@@ -610,6 +875,10 @@ window.addEventListener('load', function() {
             submenu.classList.add('show');
             arrow.classList.add('rotated');
         }
+    }
+    // Restore presensi/timer state
+    if (typeof loadPresensiState === 'function') {
+        loadPresensiState();
     }
 });
 

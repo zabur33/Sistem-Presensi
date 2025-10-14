@@ -14,6 +14,8 @@ class AttendanceController extends Controller
         $year = (int)($request->query('year') ?: now()->year);
         $month = (int)($request->query('month') ?: now()->month);
         $location = $request->query('location'); // kantor | luar_kantor | null
+        $status = $request->query('status'); // Hadir | Tanpa Keterangan | null
+        $verification = $request->query('verification'); // Berhasil | Ditolak | — | null
 
         // Query DB
         $query = Attendance::query()
@@ -25,6 +27,17 @@ class AttendanceController extends Controller
             $query->where('location_type', $location);
         }
 
+        if (in_array($status, ['Hadir','Tanpa Keterangan'], true)) {
+            $query->where('status', $status);
+        }
+        if (in_array($verification, ['Berhasil','Ditolak','—'], true)) {
+            if ($verification === '—') {
+                $query->whereNull('verification');
+            } else {
+                $query->where('verification', $verification);
+            }
+        }
+
         $rows = $query->orderByDesc('date')->limit(200)->get();
 
         $items = $rows->map(function ($a) {
@@ -32,8 +45,13 @@ class AttendanceController extends Controller
                 'id' => $a->id,
                 'name' => optional($a->user)->name ?? '—',
                 'date' => optional($a->date)->format('d-m-Y') ?? (string) $a->date,
-                'time' => $a->time_in ? (\Carbon\Carbon::parse($a->time_in)->format('H.i')) : '-',
+                'time_in' => $a->time_in ? (\Carbon\Carbon::parse($a->time_in)->format('H.i')) : '-',
+                'time_out' => $a->time_out ? (\Carbon\Carbon::parse($a->time_out)->format('H.i')) : '-',
                 'status' => $a->status,
+                'location_type' => $a->location_type,
+                'location_text' => $a->location_text,
+                'photo_path' => $a->photo_path,
+                'activity_text' => $a->activity_text,
                 'verification' => $a->verification ?? '—',
                 'verification_type' => ($a->verification === 'Berhasil') ? 'success' : 'neutral',
             ];
@@ -47,6 +65,9 @@ class AttendanceController extends Controller
         return view('admin.kelola-presensi', [
             'year' => $year,
             'month' => $month,
+            'location' => $location,
+            'statusFilter' => $status,
+            'verificationFilter' => $verification,
             'items' => $items,
             'summary' => $summary,
         ]);

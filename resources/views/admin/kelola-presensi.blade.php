@@ -73,6 +73,23 @@
             <option value="luar_kantor" @selected(request('location')==='luar_kantor')>Luar Kantor</option>
         </select>
     </div>
+    <div>
+        <label class="form-label">Status</label>
+        <select class="form-input" name="status">
+            <option value="">Semua</option>
+            <option value="Hadir" @selected(($statusFilter ?? '')==='Hadir')>Hadir</option>
+            <option value="Tanpa Keterangan" @selected(($statusFilter ?? '')==='Tanpa Keterangan')>Tanpa Keterangan</option>
+        </select>
+    </div>
+    <div>
+        <label class="form-label">Verifikasi</label>
+        <select class="form-input" name="verification">
+            <option value="">Semua</option>
+            <option value="—" @selected(($verificationFilter ?? '')==='—')>—</option>
+            <option value="Berhasil" @selected(($verificationFilter ?? '')==='Berhasil')>Berhasil</option>
+            <option value="Ditolak" @selected(($verificationFilter ?? '')==='Ditolak')>Ditolak</option>
+        </select>
+    </div>
     <button type="submit" class="btn-show" style="background:#fd9b63;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-weight:700;">Tampilkan</button>
     <style>
         .form-label{display:block;margin-bottom:6px;font-weight:600;color:#5b4e48}
@@ -82,15 +99,20 @@
 </form>
 
 <!-- Table -->
-<div style="margin-top:6px;margin-bottom:8px;font-weight:800;font-size:20px;">Riwayat Presensi :</ndiv>
+<div style="margin-top:6px;margin-bottom:8px;font-weight:800;font-size:20px;">Riwayat Presensi :</div>
 <div class="table-wrap">
     <table class="table-presensi">
         <thead>
             <tr>
                 <th>Nama</th>
                 <th>Tanggal</th>
-                <th>Waktu</th>
+                <th>Masuk</th>
+                <th>Pulang</th>
                 <th>Status</th>
+                <th>Tipe</th>
+                <th>Lokasi</th>
+                <th>Kegiatan</th>
+                <th>Foto</th>
                 <th>Verifikasi</th>
             </tr>
         </thead>
@@ -99,8 +121,19 @@
                 <tr>
                     <td>{{ $row['name'] }}</td>
                     <td>{{ $row['date'] }}</td>
-                    <td>{{ $row['time'] }}</td>
+                    <td>{{ $row['time_in'] }}</td>
+                    <td>{{ $row['time_out'] }}</td>
                     <td>{{ $row['status'] }}</td>
+                    <td>{{ $row['location_type'] === 'luar_kantor' ? 'Luar Kantor' : ($row['location_type'] === 'kantor' ? 'Dalam Kantor' : '—') }}</td>
+                    <td>{{ $row['location_text'] ?? '—' }}</td>
+                    <td>{{ ($row['location_type'] === 'luar_kantor') ? ($row['activity_text'] ?? '—') : '—' }}</td>
+                    <td>
+                        @if(!empty($row['photo_path']))
+                            <a href="{{ asset('storage/'.$row['photo_path']) }}" target="_blank">Lihat</a>
+                        @else
+                            —
+                        @endif
+                    </td>
                     <td style="display:flex; align-items:center; gap:10px;">
                         @php $type = $row['verification_type'] ?? 'neutral'; @endphp
                         <span class="badge {{ $type === 'success' ? 'success' : '' }}">{{ $row['verification'] }}</span>
@@ -114,7 +147,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" style="text-align:center;color:#7a7a7a;">Tidak ada data presensi untuk periode ini.</td>
+                    <td colspan="10" style="text-align:center;color:#7a7a7a;">Tidak ada data presensi untuk periode ini.</td>
                 </tr>
             @endforelse
         </tbody>

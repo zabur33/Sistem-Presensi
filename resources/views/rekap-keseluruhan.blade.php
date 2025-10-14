@@ -38,8 +38,13 @@
             </div>
         </div>
         <div class="logout">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
-            Logout
+            <form method="POST" action="{{ route('logout') }}" style="display:flex;align-items:center;gap:8px;">
+                @csrf
+                <button type="submit" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:inherit;cursor:pointer;">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
+                    Logout
+                </button>
+            </form>
         </div>
     </div>
     <div class="content-area">
@@ -86,90 +91,56 @@
                             <th>Kepulangan</th>
                             <th>Total Jam Kerja</th>
                             <th>Keterangan</th>
+                            <th>Tipe Presensi</th>
+                            <th>Lokasi</th>
+                            <th>Kegiatan</th>
+                            <th>Foto</th>
                         </tr>
                     </thead>
                     <tbody id="rekapTableBody">
-                        <!-- Sample data - in real app this would come from backend -->
-                        <tr>
-                            <td>1</td>
-                            <td>01/01/2024</td>
-                            <td>08:00</td>
-                            <td>17:00</td>
-                            <td>8 jam</td>
-                            <td>Hadir</td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>02/01/2024</td>
-                            <td>08:15</td>
-                            <td>17:30</td>
-                            <td>8 jam 15 menit</td>
-                            <td>Terlambat</td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td>03/01/2024</td>
-                            <td>08:00</td>
-                            <td>16:00</td>
-                            <td>7 jam</td>
-                            <td>Pulang Cepat</td>
-                        </tr>
-                        <tr>
-                            <td>4</td>
-                            <td>04/01/2024</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td>0 jam</td>
-                            <td>Tidak Hadir</td>
-                        </tr>
-                        <tr>
-                            <td>5</td>
-                            <td>05/01/2024</td>
-                            <td>08:00</td>
-                            <td>18:00</td>
-                            <td>9 jam</td>
-                            <td>Lembur</td>
-                        </tr>
-                        <tr>
-                            <td>6</td>
-                            <td>06/01/2024</td>
-                            <td>08:30</td>
-                            <td>17:00</td>
-                            <td>7 jam 30 menit</td>
-                            <td>Terlambat</td>
-                        </tr>
-                        <tr>
-                            <td>7</td>
-                            <td>07/01/2024</td>
-                            <td>08:00</td>
-                            <td>17:00</td>
-                            <td>8 jam</td>
-                            <td>Hadir</td>
-                        </tr>
-                        <tr>
-                            <td>8</td>
-                            <td>08/01/2024</td>
-                            <td>08:00</td>
-                            <td>17:00</td>
-                            <td>8 jam</td>
-                            <td>Hadir</td>
-                        </tr>
-                        <tr>
-                            <td>9</td>
-                            <td>09/01/2024</td>
-                            <td>08:10</td>
-                            <td>17:15</td>
-                            <td>8 jam 5 menit</td>
-                            <td>Terlambat</td>
-                        </tr>
-                        <tr>
-                            <td>10</td>
-                            <td>10/01/2024</td>
-                            <td>08:00</td>
-                            <td>17:00</td>
-                            <td>8 jam</td>
-                            <td>Hadir</td>
-                        </tr>
+                        @php
+                            $i = 1;
+                        @endphp
+                        @forelse(($rows ?? []) as $r)
+                            @php
+                                $tgl = $r->date ? \Carbon\Carbon::parse($r->date)->format('d/m/Y') : '-';
+                                $in  = $r->time_in ? \Carbon\Carbon::parse($r->time_in)->format('H:i') : '-';
+                                $out = $r->time_out ? \Carbon\Carbon::parse($r->time_out)->format('H:i') : '-';
+                                $dur = $r->duration_minutes ?? null;
+                                if ($dur !== null) {
+                                    $jam = intdiv($dur, 60);
+                                    $menit = $dur % 60;
+                                    $durasiTxt = $jam > 0 ? ($jam.' jam'.($menit>0?' '.$menit.' menit':'')) : ($menit.' menit');
+                                } else {
+                                    $durasiTxt = '-';
+                                }
+                            @endphp
+                            <tr>
+                                <td>{{ $i++ }}</td>
+                                <td>{{ $tgl }}</td>
+                                <td>{{ $in }}</td>
+                                <td>{{ $out }}</td>
+                                <td>{{ $durasiTxt }}</td>
+                                <td>{{ $r->status ?? '-' }}</td>
+                                <td>
+                                    @php $lt = $r->location_type ?? null; @endphp
+                                    {{ $lt === 'luar_kantor' ? 'Luar Kantor' : ($lt === 'kantor' ? 'Dalam Kantor' : '-') }}
+                                </td>
+                                <td>{{ $r->location_text ?? '-' }}</td>
+                                <td>{{ ($r->location_type === 'luar_kantor') ? ($r->activity_text ?? '-') : '-' }}</td>
+                                <td>
+                                    @if(!empty($r->photo_path))
+                                        <a href="{{ asset('storage/'.$r->photo_path) }}" target="_blank">Lihat</a>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="10" style="text-align:center;">Belum ada data presensi.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -295,25 +266,15 @@ function applyFilter() {
     const dateFrom = document.getElementById('dateFrom').value;
     const dateTo = document.getElementById('dateTo').value;
     const status = document.getElementById('statusFilter').value;
-
-    // Here you would typically filter the data based on the criteria
-    // For now, we'll just close the modal
-    toggleFilterModal();
-
-    // In a real application, you would send these filters to the backend
-    console.log('Applying filters:', { dateFrom, dateTo, status });
+    const params = new URLSearchParams();
+    if (dateFrom) params.set('dateFrom', dateFrom);
+    if (dateTo) params.set('dateTo', dateTo);
+    if (status) params.set('status', status);
+    window.location.href = `${window.location.pathname}?${params.toString()}`;
 }
 
 function resetFilter() {
-    document.getElementById('dateFrom').value = '';
-    document.getElementById('dateTo').value = '';
-    document.getElementById('statusFilter').value = '';
-
-    // Reset table display
-    const rows = document.querySelectorAll('#rekapTableBody tr');
-    rows.forEach(row => {
-        row.style.display = '';
-    });
+    window.location.href = window.location.pathname;
 }
 
 // Pagination functions

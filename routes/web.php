@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\RecapController;
 use App\Http\Controllers\Admin\MonitoringController;
 use App\Http\Controllers\Admin\OvertimeController;
+use App\Http\Controllers\AttendanceSyncController;
+use App\Http\Controllers\UserRecapController;
 use App\Http\Controllers\Admin\EmployeeRegistrationController;
 
 Route::get('/', function () {
@@ -39,10 +41,8 @@ Route::middleware('auth')->group(function () {
         return view('lembur');
     })->name('lembur');
 
-    // Rekap Keseluruhan route
-    Route::get('/rekap-keseluruhan', function () {
-        return view('rekap-keseluruhan');
-    })->name('rekap.keseluruhan');
+    // Rekap Keseluruhan route (dynamic from DB)
+    Route::get('/rekap-keseluruhan', [UserRecapController::class, 'index'])->name('rekap.keseluruhan');
 
     // Profile route
     Route::get('/profile', function () {
@@ -56,6 +56,11 @@ Route::middleware('auth')->group(function () {
 
     // Reports
     Route::get('/reports/attendance', [ReportController::class, 'attendance'])->name('reports.attendance');
+
+    // Attendance API (sync)
+    Route::post('/attendance/check-in', [AttendanceSyncController::class, 'checkIn'])->name('attendance.checkin');
+    Route::post('/attendance/check-out', [AttendanceSyncController::class, 'checkOut'])->name('attendance.checkout');
+    Route::post('/attendance/proof', [AttendanceSyncController::class, 'proof'])->name('attendance.proof');
 });
 
 // Admin routes (tampilan sama, halaman berbeda)
