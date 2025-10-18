@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\RecapController;
 use App\Http\Controllers\Admin\MonitoringController;
 use App\Http\Controllers\Admin\OvertimeController;
+use App\Http\Controllers\UserOvertimeController;
 use App\Http\Controllers\AttendanceSyncController;
 use App\Http\Controllers\UserRecapController;
 use App\Http\Controllers\Admin\EmployeeRegistrationController;
@@ -40,6 +41,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/lembur', function () {
         return view('lembur');
     })->name('lembur');
+
+    // Overtime submit + user notifications
+    Route::post('/overtime/submit', [UserOvertimeController::class, 'submit'])->name('user.overtime.submit');
+    Route::get('/overtime/notifications', [UserOvertimeController::class, 'notifications'])->name('user.overtime.notifications');
 
     // Rekap Keseluruhan route (dynamic from DB)
     Route::get('/rekap-keseluruhan', [UserRecapController::class, 'index'])->name('rekap.keseluruhan');
@@ -93,6 +98,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/notifikasi-lembur', [OvertimeController::class, 'index'])->name('admin.overtime');
     Route::post('/notifikasi-lembur/{overtime}/read', [OvertimeController::class, 'markRead'])->name('admin.overtime.read');
     Route::post('/notifikasi-lembur/read-all', [OvertimeController::class, 'markAllRead'])->name('admin.overtime.readAll');
+    Route::post('/notifikasi-lembur/{overtime}/approve', [OvertimeController::class, 'approve'])->name('admin.overtime.approve');
+    Route::post('/notifikasi-lembur/{overtime}/reject', [OvertimeController::class, 'reject'])->name('admin.overtime.reject');
 
     Route::get('/profile', function () {
         return view('admin.profile');

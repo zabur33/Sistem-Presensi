@@ -76,6 +76,27 @@
                     <div style="color:#7a7a7a;font-size:12px;white-space:nowrap;">{{ optional($it->date)->format('d-m-Y') ?? (string)$it->date }} {{ substr($it->start_time,0,5) }}-{{ substr($it->end_time,0,5) }}</div>
                 </div>
                 <div style="margin-top:2px;color:#5b4e48;">Mengirimkan pengajuan lembur: <em>{{ $it->reason ?? '-' }}</em></div>
+                @php
+                    $face = $it->face_photo_path ? asset('storage/'.$it->face_photo_path) : null;
+                    $supp = $it->support_photo_path ? asset('storage/'.$it->support_photo_path) : null;
+                @endphp
+                @if($face || $supp || !empty($it->address))
+                    <div style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                        @if($face)
+                            <a href="{{ $face }}" target="_blank" style="display:inline-block;border:1px solid #e5dedb;border-radius:6px;overflow:hidden;width:60px;height:60px;background:#fff;">
+                                <img src="{{ $face }}" alt="face" style="width:100%;height:100%;object-fit:cover;"/>
+                            </a>
+                        @endif
+                        @if($supp)
+                            <a href="{{ $supp }}" target="_blank" style="display:inline-block;border:1px solid #e5dedb;border-radius:6px;overflow:hidden;width:60px;height:60px;background:#fff;">
+                                <img src="{{ $supp }}" alt="support" style="width:100%;height:100%;object-fit:cover;"/>
+                            </a>
+                        @endif
+                        @if(!empty($it->address))
+                            <span style="color:#6b7280;font-size:12px;background:#fff;padding:6px 10px;border:1px solid #e5dedb;border-radius:6px;">{{ $it->address }}</span>
+                        @endif
+                    </div>
+                @endif
                 <div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                     <span class="badge {{ $it->status }}">{{ ucfirst($it->status) }}</span>
                     @if(!$it->read_at)

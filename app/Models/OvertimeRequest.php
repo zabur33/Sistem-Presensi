@@ -12,6 +12,7 @@ class OvertimeRequest extends Model
 
     protected $fillable = [
         'user_id','date','start_time','end_time','duration_minutes','reason','status','read_at',
+        'face_photo_path','support_photo_path','address',
     ];
 
     protected $casts = [

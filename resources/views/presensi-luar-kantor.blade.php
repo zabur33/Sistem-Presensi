@@ -57,7 +57,16 @@
                 </div>
             </div>
             <div class="header-icons">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <div id="notifWrapper" style="position:relative;display:inline-block;">
+                    <a href="#" id="notifBell" onclick="toggleNotifDropdown(event)" title="Notifikasi">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        <span id="notifBadge" style="position:absolute;top:-4px;right:-4px;background:#dc2626;color:#fff;border-radius:999px;padding:0 6px;font-size:10px;line-height:18px;height:18px;display:none;">0</span>
+                    </a>
+                    <div id="notifDropdown" style="display:none;position:absolute;right:0;top:28px;background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;min-width:280px;box-shadow:0 12px 24px rgba(0,0,0,0.12);z-index:50;">
+                        <div style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-weight:700;color:#111827;">Notifikasi</div>
+                        <div id="notifList" style="max-height:320px;overflow:auto"></div>
+                    </div>
+                </div>
                 <a href="/profile">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a7.5 7.5 0 0 1 13 0"/></svg>
                 </a>
@@ -447,6 +456,84 @@ function stopAllTimers() {
     if (breakInterval) { clearInterval(breakInterval); breakInterval = null; }
 }
 
+// Flag to trigger full reset after kepulangan
+let pendingReset = false;
+
+// Reset state and UI so user can start a fresh luar-kantor attendance
+function resetPresensiStateAndUI() {
+    try {
+        stopAllTimers();
+
+        // Reset core states
+        attendanceState = { kedatangan: false, istirahat: false, kembali: false, kepulangan: false };
+        attendanceTimes = { kedatangan: null, istirahat: null, kembali: null, kepulangan: null };
+        breakUsedMs = 0;
+        breakStartAt = null;
+
+        // Reset luar-kantor specifics
+        uploadedPhoto = null;
+        currentLocation = null;
+        activityDescription = '';
+        proofUploaded = false;
+
+        // Clear persisted state
+        localStorage.removeItem('presensi-luar-state');
+
+        // Badges back to default
+        ['kedatangan','istirahat','kembali','kepulangan'].forEach(type => {
+            const badge = document.getElementById(`${type}-status`);
+            if (badge) { badge.textContent = 'Presensi'; badge.classList.remove('completed'); }
+        });
+
+        // Times back to placeholders
+        const ked = document.getElementById('kedatangan-time'); if (ked) ked.textContent = '08.00';
+        const ist = document.getElementById('istirahat-time'); if (ist) ist.innerHTML = '60 <span class="unit">Menit</span>';
+        const kmb = document.getElementById('kembali-time'); if (kmb) kmb.textContent = '00.00';
+        const pul = document.getElementById('kepulangan-time'); if (pul) pul.textContent = '00.00';
+
+        // Restore button contents and disabled state
+        const btnIcon = '\n        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">\n            <path d="M9 12l2 2 4-4"/>\n        </svg>\n        Presensi\n    ';
+        const btnKed = document.getElementById('btn-kedatangan');
+        if (btnKed) { btnKed.disabled = true; btnKed.classList.remove('completed'); btnKed.innerHTML = btnIcon; }
+        const btnIst = document.getElementById('btn-istirahat');
+        if (btnIst) { btnIst.disabled = true; btnIst.classList.remove('completed'); btnIst.innerHTML = btnIcon; }
+        const btnKmb = document.getElementById('btn-kembali');
+        if (btnKmb) { btnKmb.disabled = true; btnKmb.classList.remove('completed'); btnKmb.innerHTML = btnIcon; }
+        const btnPul = document.getElementById('btn-kepulangan');
+        if (btnPul) { btnPul.disabled = true; btnPul.classList.remove('completed'); btnPul.innerHTML = btnIcon; }
+
+        // Reset camera/photo UI
+        const cameraArea = document.getElementById('cameraArea');
+        const cameraPreview = document.getElementById('cameraPreview');
+        const cameraStatus = document.getElementById('cameraStatus');
+        const cameraBtn = document.getElementById('cameraBtn');
+        const photoPreview = document.getElementById('photoPreview');
+        const previewImage = document.getElementById('previewImage');
+        if (photoPreview) photoPreview.style.display = 'none';
+        if (previewImage) previewImage.src = '';
+        if (cameraArea) cameraArea.style.display = 'block';
+        if (cameraPreview) cameraPreview.style.display = 'none';
+        if (cameraStatus) cameraStatus.innerHTML = '<span class="status-indicator pending">Belum Mengambil Foto</span>';
+        if (cameraBtn) {
+            cameraBtn.classList.remove('completed');
+            cameraBtn.innerHTML = '\n                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">\n                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>\n                    <circle cx="12" cy="13" r="4"/>\n                </svg>\n                Buka Kamera\n            ';
+        }
+
+        // Reset location and activity inputs
+        const locInput = document.getElementById('locationInput');
+        if (locInput) { locInput.value = ''; locInput.placeholder = 'Lokasi akan terdeteksi otomatis...'; }
+        const actInput = document.getElementById('activityInput');
+        if (actInput) actInput.value = '';
+
+        // Fix cursors
+        const buttons = document.querySelectorAll('button, .presensi-btn, .camera-btn, .activity-btn');
+        buttons.forEach(button => {
+            button.style.pointerEvents = 'auto';
+            button.style.cursor = button.disabled ? 'not-allowed' : 'pointer';
+        });
+    } catch {}
+}
+
 function handlePresensi(type) {
     // Check if photo has been taken
     if (!uploadedPhoto) {
@@ -484,6 +571,7 @@ function handlePresensi(type) {
         attendanceState[type] = true;
         attendanceTimes[type] = currentTime;
         savePresensiState();
+        pendingReset = true; // trigger reset after user closes modal
         showSuccessModal(type, currentTime);
         return;
     }
@@ -634,6 +722,10 @@ function showSuccessModal(type, time) {
 
 function closeModal() {
     document.getElementById('successModal').style.display = 'none';
+    if (pendingReset) {
+        pendingReset = false;
+        resetPresensiStateAndUI();
+    }
 }
 
 // Camera Functions
@@ -880,6 +972,8 @@ window.addEventListener('load', function() {
     if (typeof loadPresensiState === 'function') {
         loadPresensiState();
     }
+    // Start polling notifications
+    if (typeof startNotifPolling === 'function') startNotifPolling();
 });
 
 // Close modal when clicking outside
@@ -926,6 +1020,43 @@ document.addEventListener('click', function(event) {
         if (arrow) arrow.classList.remove('rotated');
     }
 });
+
+// ===== Notifikasi Overtime (user) =====
+let notifTimer=null;
+function startNotifPolling(){
+    fetchAndRenderNotif();
+    if (notifTimer) clearInterval(notifTimer);
+    notifTimer = setInterval(fetchAndRenderNotif, 30000);
+}
+function toggleNotifDropdown(e){ e.preventDefault(); const dd=document.getElementById('notifDropdown'); if(!dd) return; const is=dd.style.display==='block'; dd.style.display=is?'none':'block'; if(!is){ localStorage.setItem('overtime_last_seen', new Date().toISOString()); updateBadge([]); } }
+function fetchAndRenderNotif(){
+    fetch("{{ route('user.overtime.notifications') }}", { headers:{'Accept':'application/json'} })
+        .then(r=>r.json()).then(items=>{ renderNotif(items); updateBadge(items); }).catch(()=>{});
+}
+function renderNotif(items){
+    const list = document.getElementById('notifList'); if(!list) return;
+    if(!items || items.length===0){ list.innerHTML = '<div style="padding:12px;color:#6b7280;">Belum ada notifikasi</div>'; return; }
+    list.innerHTML = items.map(it=>{
+        const status = it.status==='approved'?'Disetujui':'Ditolak';
+        const color = it.status==='approved'?'#065f46':'#991b1b';
+        const badgeBg = it.status==='approved'?'#ecfdf5':'#fef2f2';
+        const time = (it.updated_at||'').replace('T',' ').slice(0,16);
+        return `<div style="padding:12px;border-bottom:1px solid #f3f4f6;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                <div style="font-weight:700;color:#111827;">Lembur ${status}</div>
+                <span style="font-size:11px;color:#6b7280;">${time}</span>
+            </div>
+            <div style="margin-top:6px;color:#374151;">${(it.reason||'-')}</div>
+            <span style="margin-top:8px;display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;background:${badgeBg};color:${color};">${status}</span>
+        </div>`;
+    }).join('');
+}
+function updateBadge(items){
+    const badge = document.getElementById('notifBadge'); if(!badge) return;
+    const lastSeen = new Date(localStorage.getItem('overtime_last_seen') || 0).getTime();
+    const cnt = (items||[]).filter(it=> new Date(it.updated_at).getTime() > lastSeen).length;
+    if(cnt>0){ badge.style.display='inline-block'; badge.textContent=cnt; } else { badge.style.display='none'; }
+}
 </script>
 </body>
 </html>

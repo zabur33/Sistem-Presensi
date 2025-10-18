@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lembur - Life Media</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/css/dashboard.css', 'resources/js/app.js'])
@@ -67,7 +68,16 @@
                 </div>
             </div>
             <div class="header-icons">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <div id="notifWrapper" style="position:relative;display:inline-block;">
+                    <a href="#" id="notifBell" onclick="toggleNotifDropdown(event)" title="Notifikasi">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        <span id="notifBadge" style="position:absolute;top:-4px;right:-4px;background:#e11d48;color:#fff;border-radius:999px;padding:0 6px;font-size:10px;line-height:18px;height:18px;display:none;">0</span>
+                    </a>
+                    <div id="notifDropdown" style="display:none;position:absolute;right:0;top:28px;background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;min-width:280px;box-shadow:0 12px 24px rgba(0,0,0,0.12);z-index:50;">
+                        <div style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-weight:700;color:#111827;">Notifikasi</div>
+                        <div id="notifList" style="max-height:320px;overflow:auto"></div>
+                    </div>
+                </div>
                 <a href="/profile">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a7.5 7.5 0 0 1 13 0"/></svg>
                 </a>
@@ -140,7 +150,7 @@
                         <input type="hidden" id="fotoData-face" name="foto_wajah_data">
                     </div>
 
-                    <!-- Foto Pendukung (Kamera) -->
+                    <!-- Foto Pendukung (Kamera / Upload) -->
                     <div class="form-group">
                         <label>Foto Pendukung</label>
                         <div class="camera-section">
@@ -182,6 +192,10 @@
                             </div>
                         </div>
                         <input type="hidden" id="fotoData-support" name="foto_pendukung_data">
+                        <div style="margin-top:10px">
+                            <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:6px;">Atau unggah file (opsional, jika kamera bermasalah)</label>
+                            <input type="file" id="supportFile" accept="image/*">
+                        </div>
                     </div>
 
                     <!-- Deskripsi Kegiatan -->
@@ -299,7 +313,10 @@ function capturePhoto(key) {
     stopCamera(key);
 }
 
-// Form submission
+// CSRF helper
+function getCsrfToken(){ const el=document.querySelector('meta[name="csrf-token"]'); return el?el.getAttribute('content'):''; }
+
+// Form submission to backend
 document.getElementById('lemburForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
@@ -311,8 +328,9 @@ document.getElementById('lemburForm').addEventListener('submit', function(e) {
     const faceData = document.getElementById('fotoData-face').value;
     const supportData = document.getElementById('fotoData-support').value;
 
-    if (!nama || !alamat || !jam || !deskripsi) {
-        alert('Mohon lengkapi semua field yang diperlukan');
+    // Nama dan alamat opsional; yang wajib: jam, deskripsi, dan foto-foto
+    if (!jam || !deskripsi) {
+        alert('Mohon isi Jam dan Deskripsi Kegiatan.');
         return;
     }
 
@@ -321,13 +339,51 @@ document.getElementById('lemburForm').addEventListener('submit', function(e) {
         return;
     }
 
-    if (!supportData) {
-        alert('Mohon ambil foto pendukung terlebih dahulu.');
+    const supportFile = document.getElementById('supportFile').files[0];
+    if (!supportData && !supportFile) {
+        alert('Mohon ambil atau unggah foto pendukung terlebih dahulu.');
         return;
     }
 
-    // Here you would typically send the data to the server
-    alert('Form lembur berhasil disubmit!');
+    // supportFile dideklarasikan di atas
+    let requestInit;
+    if (supportFile) {
+        const fd = new FormData();
+        fd.append('nama', nama||'');
+        fd.append('alamat', alamat||'');
+        fd.append('jam', jam);
+        fd.append('deskripsi', deskripsi);
+        if (faceData) fd.append('foto_wajah_data', faceData);
+        if (supportData) fd.append('foto_pendukung_data', supportData);
+        fd.append('support_file', supportFile);
+        requestInit = {
+            method:'POST',
+            credentials:'same-origin',
+            headers:{ 'X-CSRF-TOKEN': getCsrfToken(), 'Accept':'application/json', 'X-Requested-With':'XMLHttpRequest' },
+            body: fd
+        };
+    } else {
+        const payload = { nama, alamat, jam, deskripsi, foto_wajah_data: faceData, foto_pendukung_data: supportData };
+        requestInit = {
+            method:'POST',
+            credentials:'same-origin',
+            headers:{ 'Content-Type':'application/json', 'Accept':'application/json', 'X-Requested-With':'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
+            body: JSON.stringify(payload)
+        };
+    }
+
+    fetch("{{ route('user.overtime.submit') }}", requestInit).then(async(res)=>{
+        if(!res.ok){
+            const txt = await res.text().catch(()=> '');
+            throw new Error('Gagal submit ('+res.status+'): '+txt.slice(0,200));
+        }
+        return res.json();
+    }).then(()=>{
+        alert('Pengajuan lembur berhasil dikirim ke admin.');
+        resetForm();
+    }).catch((err)=>{
+        alert('Gagal mengirim pengajuan lembur. '+ (err && err.message ? err.message : 'Pastikan Jam, Deskripsi, dan kedua foto sudah diambil.'));
+    });
 });
 
 // Reset form
@@ -348,7 +404,47 @@ window.addEventListener('load', function() {
     const now = new Date();
     const timeString = now.toTimeString().slice(0, 5);
     document.getElementById('jam').value = timeString;
+
+    // Start polling notifications
+    startNotifPolling();
 });
+
+// ===== Notifikasi User (overtime approvals) =====
+let notifTimer=null;
+function startNotifPolling(){
+    fetchAndRenderNotif();
+    if (notifTimer) clearInterval(notifTimer);
+    notifTimer = setInterval(fetchAndRenderNotif, 30000);
+}
+function toggleNotifDropdown(e){ e.preventDefault(); const dd=document.getElementById('notifDropdown'); if(!dd) return; const is=dd.style.display==='block'; dd.style.display=is?'none':'block'; if(!is){ localStorage.setItem('overtime_last_seen', new Date().toISOString()); updateBadge([]); } }
+function fetchAndRenderNotif(){
+    fetch("{{ route('user.overtime.notifications') }}", { headers:{'Accept':'application/json'} })
+        .then(r=>r.json()).then(items=>{ renderNotif(items); updateBadge(items); }).catch(()=>{});
+}
+function renderNotif(items){
+    const list = document.getElementById('notifList'); if(!list) return;
+    if(!items || items.length===0){ list.innerHTML = '<div style="padding:12px;color:#6b7280;">Belum ada notifikasi</div>'; return; }
+    list.innerHTML = items.map(it=>{
+        const status = it.status==='approved'?'Disetujui':'Ditolak';
+        const color = it.status==='approved'?'#065f46':'#991b1b';
+        const badgeBg = it.status==='approved'?'#ecfdf5':'#fef2f2';
+        const time = (it.updated_at||'').replace('T',' ').slice(0,16);
+        return `<div style="padding:12px;border-bottom:1px solid #f3f4f6;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                <div style="font-weight:700;color:#111827;">Lembur ${status}</div>
+                <span style="font-size:11px;color:#6b7280;">${time}</span>
+            </div>
+            <div style="margin-top:6px;color:#374151;">${(it.reason||'-')}</div>
+            <span style="margin-top:8px;display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;background:${badgeBg};color:${color};">${status}</span>
+        </div>`;
+    }).join('');
+}
+function updateBadge(items){
+    const badge = document.getElementById('notifBadge'); if(!badge) return;
+    const lastSeen = new Date(localStorage.getItem('overtime_last_seen') || 0).getTime();
+    const cnt = (items||[]).filter(it=> new Date(it.updated_at).getTime() > lastSeen).length;
+    if(cnt>0){ badge.style.display='inline-block'; badge.textContent=cnt; } else { badge.style.display='none'; }
+}
 </script>
 </body>
 </html>
