@@ -115,6 +115,9 @@ class AttendanceSyncController extends Controller
             'location_text' => 'nullable|string|max:255',
             'activity_text' => 'nullable|string',
             'location_type' => 'required|in:kantor,luar_kantor',
+            'lat' => 'nullable|numeric|between:-90,90',
+            'lng' => 'nullable|numeric|between:-180,180',
+            'accuracy' => 'nullable|numeric|min:0',
         ]);
 
         $today = now()->toDateString();
@@ -136,6 +139,10 @@ class AttendanceSyncController extends Controller
         if ($request->filled('location_text')) {
             $attendance->location_text = $request->input('location_text');
         }
+        // Store geo if provided
+        if ($request->filled('lat')) { $attendance->lat = $request->input('lat'); }
+        if ($request->filled('lng')) { $attendance->lng = $request->input('lng'); }
+        if ($request->filled('accuracy')) { $attendance->accuracy = $request->input('accuracy'); }
         // Only luar_kantor should store activity_text
         if ($request->input('location_type') === 'luar_kantor' && $request->filled('activity_text')) {
             $attendance->activity_text = $request->input('activity_text');

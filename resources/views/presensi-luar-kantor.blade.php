@@ -337,6 +337,9 @@ let currentLocation = null;
 let uploadedPhoto = null;
 let activityDescription = '';
 let proofUploaded = false;
+let currentLat = null;
+let currentLng = null;
+let currentAccuracy = null;
 
 function tryUploadProofIfReady() {
     if (proofUploaded) return;
@@ -347,6 +350,13 @@ function tryUploadProofIfReady() {
     fd.append('photo', file);
     fd.append('location_text', currentLocation);
     fd.append('location_type', 'luar_kantor');
+    if (currentLat != null && currentLng != null) {
+        fd.append('lat', currentLat);
+        fd.append('lng', currentLng);
+    }
+    if (currentAccuracy != null) {
+        fd.append('accuracy', currentAccuracy);
+    }
     if (activityDescription && activityDescription.trim().length > 0) {
         fd.append('activity_text', activityDescription.trim());
     }
@@ -890,18 +900,22 @@ function getCurrentLocation() {
             function(position) {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
+                const acc = position.coords.accuracy;
+                currentLat = lat;
+                currentLng = lng;
+                currentAccuracy = acc;
                 
-                // Use reverse geocoding to get address (simplified version)
-                fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=id`)
-                    .then(response => response.json())
+                // Reverse geocode via backend (Google Maps)
+                fetch(`{{ route('reverse.geocode') }}?lat=${lat}&lng=${lng}`)
+                    .then(r => r.ok ? r.json() : Promise.reject())
                     .then(data => {
-                        const address = data.locality + ', ' + data.city + ', ' + data.principalSubdivision;
+                        const address = (data && data.address) ? data.address : `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
                         currentLocation = address;
                         locationText.textContent = address;
                         locationInput.value = address;
                         tryUploadProofIfReady();
                     })
-                    .catch(error => {
+                    .catch(() => {
                         const fallbackLocation = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
                         currentLocation = fallbackLocation;
                         locationText.textContent = fallbackLocation;
@@ -949,6 +963,13 @@ function saveActivity() {
     fd.append('location_type', 'luar_kantor');
     fd.append('activity_text', activityDescription.trim());
     if (currentLocation) fd.append('location_text', currentLocation);
+    if (currentLat != null && currentLng != null) {
+        fd.append('lat', currentLat);
+        fd.append('lng', currentLng);
+    }
+    if (currentAccuracy != null) {
+        fd.append('accuracy', currentAccuracy);
+    }
     postForm('{{ route('attendance.proof') }}', fd).catch(()=>{});
     alert('Keterangan kegiatan berhasil disimpan.');
 }

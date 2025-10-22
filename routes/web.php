@@ -12,6 +12,7 @@ use App\Http\Controllers\UserOvertimeController;
 use App\Http\Controllers\AttendanceSyncController;
 use App\Http\Controllers\UserRecapController;
 use App\Http\Controllers\Admin\EmployeeRegistrationController;
+use App\Http\Controllers\ReverseGeocodeController;
 
 Route::get('/', function () {
     return view('login');
@@ -66,6 +67,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance/check-in', [AttendanceSyncController::class, 'checkIn'])->name('attendance.checkin');
     Route::post('/attendance/check-out', [AttendanceSyncController::class, 'checkOut'])->name('attendance.checkout');
     Route::post('/attendance/proof', [AttendanceSyncController::class, 'proof'])->name('attendance.proof');
+
+    // Reverse geocoding (server-side via Google Maps)
+    Route::get('/api/reverse-geocode', [ReverseGeocodeController::class, 'lookup'])->name('reverse.geocode');
 });
 
 // Admin routes (tampilan sama, halaman berbeda)
