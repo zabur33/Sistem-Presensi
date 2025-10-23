@@ -23,12 +23,8 @@
             </div>
             <div class="header-icons" style="margin-left:auto; display:flex; align-items:center; gap:12px;">
                 <a href="/admin/profile" aria-label="Kelola Profile" title="Kelola Profile" 
-                   style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;border:2px solid #ffffff;background:transparent;color:#ffffff;transition:background-color .2s, color .2s;">
-                    <!-- Match user icon: head + shoulders only (no outer ring) -->
-                    <svg fill="none" stroke="#ffffff" stroke-width="2" viewBox="0 0 24 24" width="20" height="20">
-                        <circle cx="12" cy="8" r="4"/>
-                        <path d="M5.5 21a7.5 7.5 0 0 1 13 0"/>
-                    </svg>
+                   style="display:grid; place-items:center; width:40px; height:40px; border-radius:50%; border:2px solid #ffffff; background:transparent; color:#ffffff; padding:0; margin:0; text-decoration:none;">
+                    <span style="display:block; font-size:20px; line-height:1; transform:translateY(1px);">👤</span>
                 </a>
             </div>
         </div>

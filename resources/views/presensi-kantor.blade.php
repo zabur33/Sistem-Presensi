@@ -77,6 +77,7 @@
             </div>
 
             <div class="attendance-grid">
+                
                 <!-- Kedatangan -->
                 <div class="attendance-card">
                     <div class="card-header">
@@ -174,6 +175,7 @@
         <button class="modal-btn" onclick="closeModal()">OK</button>
     </div>
 </div>
+
 
 <script>
 // Fetch helpers
@@ -573,6 +575,7 @@ function closeModal() {
     }
 }
 
+
 function submitReport() {
     const problemText = document.getElementById('problem-text').value;
     if (problemText.trim() === '' || problemText === 'Istirahat') {
@@ -622,8 +625,8 @@ window.addEventListener('load', function() {
 
 // Close modal when clicking outside
 window.addEventListener('click', function(event) {
-    const modal = document.getElementById('successModal');
-    if (event.target === modal) {
+    const successModal = document.getElementById('successModal');
+    if (event.target === successModal) {
         closeModal();
     }
 });

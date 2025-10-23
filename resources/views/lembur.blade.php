@@ -135,7 +135,7 @@
                                 </div>
                                 <button class="camera-btn" id="cameraBtn-face" onclick="startCamera('face')" type="button">
                                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1 2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                                    Buka Kamera
+                                    Ambil Foto
                                 </button>
                             </div>
                             <!-- Preview Foto -->
@@ -148,6 +148,8 @@
                             </div>
                         </div>
                         <input type="hidden" id="fotoData-face" name="foto_wajah_data">
+                        <input type="hidden" id="latitude" name="latitude">
+                        <input type="hidden" id="longitude" name="longitude">
                     </div>
 
                     <!-- Foto Pendukung (Kamera / Upload) -->
@@ -179,7 +181,7 @@
                                 </div>
                                 <button class="camera-btn" id="cameraBtn-support" onclick="startCamera('support')" type="button">
                                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1 2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                                    Buka Kamera
+                                    Ambil Foto
                                 </button>
                             </div>
                             <!-- Preview Foto -->
@@ -256,33 +258,68 @@ document.addEventListener('click', function(event) {
 // Camera logic (dual: face & support)
 let cameraStreams = { face: null, support: null };
 
+// Start camera with geolocation
 function startCamera(key) {
-    const preview = document.getElementById(`cameraPreview-${key}`);
-    const area = document.getElementById(`cameraArea-${key}`);
     const video = document.getElementById(`cameraVideo-${key}`);
+    const cameraArea = document.getElementById(`cameraArea-${key}`);
+    const cameraPreview = document.getElementById(`cameraPreview-${key}`);
+    const photoPreview = document.getElementById(`photoPreview-${key}`);
 
-    area.style.display = 'none';
-    preview.style.display = 'block';
+    // Hide photo preview and show camera
+    photoPreview.style.display = 'none';
+    cameraArea.style.display = 'none';
+    cameraPreview.style.display = 'block';
 
-    const constraints = {
-        video: {
-            facingMode: 'environment',
+    // Request geolocation permission first
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                // Save coordinates to form
+                document.getElementById('latitude').value = position.coords.latitude;
+                document.getElementById('longitude').value = position.coords.longitude;
+                console.log('Location access granted:', position.coords);
+                
+                // After getting location, access camera
+                accessCamera(key);
+            },
+            (error) => {
+                console.error('Error getting location:', error);
+                alert('Tidak dapat mengakses lokasi. Beberapa fitur mungkin tidak berfungsi dengan baik.');
+                // Continue with camera access even if location is denied
+                accessCamera(key);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            }
+        );
+    } else {
+        console.log('Geolocation is not supported by this browser');
+        accessCamera(key);
+    }
+}
+
+// Access camera function
+function accessCamera(key) {
+    const video = document.getElementById(`cameraVideo-${key}`);
+    
+    navigator.mediaDevices.getUserMedia({ 
+        video: { 
             width: { ideal: 1280 },
             height: { ideal: 720 },
-            frameRate: { ideal: 30, min: 15 }
-        }
-    };
-
-    navigator.mediaDevices.getUserMedia(constraints)
-        .then(stream => {
-            cameraStreams[key] = stream;
-            video.srcObject = stream;
-        })
-        .catch(() => {
-            alert('Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.');
-            area.style.display = 'block';
-            preview.style.display = 'none';
-        });
+            facingMode: key === 'face' ? 'user' : 'environment'
+        } 
+    })
+    .then(stream => {
+        video.srcObject = stream;
+        video.play();
+    })
+    .catch(err => {
+        console.error('Error accessing camera:', err);
+        alert('Tidak dapat mengakses kamera. Pastikan Anda telah memberikan izin akses kamera.');
+        stopCamera(key);
+    });
 }
 
 function stopCamera(key) {
@@ -295,6 +332,7 @@ function stopCamera(key) {
     document.getElementById(`cameraPreview-${key}`).style.display = 'none';
 }
 
+// Capture photo from camera with geolocation
 function capturePhoto(key) {
     const video = document.getElementById(`cameraVideo-${key}`);
     const canvas = document.getElementById(`captureCanvas-${key}`);
@@ -304,7 +342,33 @@ function capturePhoto(key) {
     canvas.height = video.videoHeight || 720;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    // Create a new canvas to add location info
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = canvas.width;
+    finalCanvas.height = canvas.height + 30; // Extra space for location text
+    const finalCtx = finalCanvas.getContext('2d');
+    
+    // Draw the original image
+    finalCtx.drawImage(canvas, 0, 0);
+    
+    // Add location info at the bottom
+    const lat = document.getElementById('latitude').value;
+    const lng = document.getElementById('longitude').value;
+    
+    if (lat && lng) {
+        finalCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        finalCtx.fillRect(0, canvas.height, canvas.width, 30);
+        
+        finalCtx.font = '14px Arial';
+        finalCtx.fillStyle = 'white';
+        finalCtx.textAlign = 'left';
+        finalCtx.fillText(`Lokasi: ${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`, 10, canvas.height + 20);
+    }
+
+    // Convert to data URL
+    const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.85);
+    
+    // Update preview and form data
     document.getElementById(`previewImage-${key}`).src = dataUrl;
     document.getElementById(`photoPreview-${key}`).style.display = 'block';
     document.getElementById(`fotoData-${key}`).value = dataUrl;
@@ -321,14 +385,26 @@ document.getElementById('lemburForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
     // Validate form
-    const nama = document.getElementById('nama').value;
-    const alamat = document.getElementById('alamat').value;
+    const nama = document.getElementById('nama').value.trim();
+    const alamat = document.getElementById('alamat').value.trim();
     const jam = document.getElementById('jam').value;
     const deskripsi = document.getElementById('deskripsi').value;
     const faceData = document.getElementById('fotoData-face').value;
     const supportData = document.getElementById('fotoData-support').value;
 
-    // Nama dan alamat opsional; yang wajib: jam, deskripsi, dan foto-foto
+    // Validasi field yang wajib diisi
+    if (!nama) {
+        alert('Mohon isi Nama Anda.');
+        document.getElementById('nama').focus();
+        return;
+    }
+
+    if (!alamat) {
+        alert('Mohon isi Alamat Anda.');
+        document.getElementById('alamat').focus();
+        return;
+    }
+
     if (!jam || !deskripsi) {
         alert('Mohon isi Jam dan Deskripsi Kegiatan.');
         return;

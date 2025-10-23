@@ -199,7 +199,7 @@
                             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
                             <circle cx="12" cy="13" r="4"/>
                         </svg>
-                        Buka Kamera
+                        Ambil Foto
                     </button>
                 </div>
                 
@@ -526,7 +526,7 @@ function resetPresensiStateAndUI() {
         if (cameraStatus) cameraStatus.innerHTML = '<span class="status-indicator pending">Belum Mengambil Foto</span>';
         if (cameraBtn) {
             cameraBtn.classList.remove('completed');
-            cameraBtn.innerHTML = '\n                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">\n                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>\n                    <circle cx="12" cy="13" r="4"/>\n                </svg>\n                Buka Kamera\n            ';
+            cameraBtn.innerHTML = '\n                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">\n                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>\n                    <circle cx="12" cy="13" r="4"/>\n                </svg>\n                Ambil Foto\n            ';
         }
 
         // Reset location and activity inputs
@@ -546,7 +546,7 @@ function resetPresensiStateAndUI() {
 
 function handlePresensi(type) {
     // Check if photo has been taken
-    if (!uploadedPhoto) {
+    if (!uploadedPhoto && type !== 'kepulangan') {
         alert('Anda harus mengambil foto terlebih dahulu sebelum melakukan presensi!');
         return;
     }
@@ -975,8 +975,52 @@ function saveActivity() {
 }
 
 // Auto-detect location on page load
+// Fungsi untuk mendapatkan lokasi dengan timeout
+function getLocationWithTimeout(timeout = 5000) {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject('Geolocation tidak didukung di browser Anda');
+            return;
+        }
+
+        const options = {
+            enableHighAccuracy: true,
+            timeout: timeout,
+            maximumAge: 0
+        };
+
+        const success = (position) => {
+            currentLocation = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy
+            };
+            resolve(currentLocation);
+        };
+
+        const error = (err) => {
+            console.warn('ERROR(' + err.code + '): ' + err.message);
+            // Tetap lanjutkan meskipun gagal dapat lokasi
+            resolve(null);
+        };
+
+        navigator.geolocation.getCurrentPosition(success, error, options);
+    });
+}
+
 window.addEventListener('load', function() {
-    getCurrentLocation();
+    // Coba dapatkan lokasi, tapi jangan blok inisialisasi UI
+    getLocationWithTimeout().then(location => {
+        if (location) {
+            console.log('Lokasi berhasil didapatkan:', location);
+            const locationInput = document.getElementById('locationInput');
+            if (locationInput) {
+                locationInput.placeholder = 'Lokasi terdeteksi';
+            }
+        }
+    }).catch(err => {
+        console.warn('Gagal mendapatkan lokasi:', err);
+    });
     
     // Show submenu on presensi pages by default - but allow toggle
     const submenu = document.getElementById('presensi-submenu');

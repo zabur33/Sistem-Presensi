@@ -37,6 +37,7 @@
         <select name="status" class="form-input">
             <option value="">Semua</option>
             <option value="Hadir" @selected(request('status')==='Hadir')>Hadir</option>
+            <option value="Izin" @selected(request('status')==='Izin')>Izin</option>
             <option value="Tanpa Keterangan" @selected(request('status')==='Tanpa Keterangan')>Tanpa Keterangan</option>
         </select>
     </div>
@@ -71,6 +72,7 @@
                 <th style="min-width:140px;">ID Pegawai</th>
                 <th style="min-width:160px;">Jabatan</th>
                 <th style="min-width:90px;">Hadir</th>
+                <th style="min-width:90px;">Izin</th>
                 <th style="min-width:110px;">Terlambat</th>
                 <th style="min-width:160px;">Tanpa Keterangan</th>
                 <th style="min-width:100px;">Lembur</th>
@@ -87,6 +89,7 @@
                     <td>{{ $r->nip ?? '—' }}</td>
                     <td>{{ $r->position ?? '—' }}</td>
                     <td><span class="chip ok">{{ $r->hadir }}</span></td>
+                    <td><span class="chip" style="background-color: #dbeafe; color: #1e40af;">{{ $r->izin ?? 0 }}</span></td>
                     <td>{{ $r->terlambat }}</td>
                     <td><span class="chip">{{ $r->tanpa_keterangan }}</span></td>
                     <td><span class="chip badge">{{ $r->lembur }}</span></td>
@@ -94,7 +97,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" style="text-align:center;color:#7a7a7a;">Tidak ada data untuk periode dan filter ini.</td>
+                    <td colspan="9" style="text-align:center;color:#7a7a7a;">Tidak ada data untuk periode dan filter ini.</td>
                 </tr>
             @endforelse
         </tbody>
