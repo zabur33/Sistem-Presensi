@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use App\Http\Controllers\ComplaintController as UserComplaintController;
+use App\Http\Controllers\Admin\ComplaintController as AdminComplaintController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\AttendanceController;
@@ -70,6 +73,9 @@ Route::middleware('auth')->group(function () {
 
     // Reverse geocoding (server-side via Google Maps)
     Route::get('/api/reverse-geocode', [ReverseGeocodeController::class, 'lookup'])->name('reverse.geocode');
+
+    // User complaints: submit pengaduan masalah (DB)
+    Route::post('/complaints', [UserComplaintController::class, 'store'])->name('user.complaints.submit');
 });
 
 // Admin routes (tampilan sama, halaman berbeda)
@@ -108,4 +114,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/profile', function () {
         return view('admin.profile');
     })->name('admin.profile');
+
+    // Admin: complaint notifications feed (DB)
+    Route::get('/complaints/notifications', [AdminComplaintController::class, 'notifications'])->name('admin.complaints.notifications');
 });

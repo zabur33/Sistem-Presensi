@@ -577,15 +577,35 @@ function closeModal() {
 
 
 function submitReport() {
-    const problemText = document.getElementById('problem-text').value;
-    if (problemText.trim() === '' || problemText === 'Istirahat') {
+    const problemInput = document.getElementById('problem-text');
+    const message = (problemInput.value || '').trim();
+    if (message === '' || message === 'Istirahat') {
         alert('Silakan masukkan deskripsi masalah terlebih dahulu.');
         return;
     }
-
-    // Here you would typically send the report to the server
-    alert('Laporan berhasil dikirim. Tim IT akan segera menindaklanjuti.');
-    document.getElementById('problem-text').value = 'Istirahat';
+    const payload = {
+        message,
+        location_type: 'kantor',
+        client_time: getCurrentTime()
+    };
+    fetch("{{ route('user.complaints.submit') }}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrfToken(), 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
+    }).then(async(res)=>{
+        if(!res.ok){
+            const t = await res.text().catch(()=> '');
+            throw new Error('Gagal mengirim laporan ('+res.status+'): '+t.slice(0,200));
+        }
+        return res.json().catch(()=> ({}));
+    }).then(()=>{
+        alert('Laporan berhasil dikirim. Admin akan mendapatkan notifikasi.');
+        problemInput.value = 'Istirahat';
+        problemInput.readOnly = true;
+    }).catch(err=>{
+        alert('Tidak dapat mengirim laporan saat ini. Coba lagi nanti.');
+        console.warn(err);
+    });
 }
 
 // Make problem textarea editable when clicked
