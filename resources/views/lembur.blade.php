@@ -141,10 +141,6 @@
                             <!-- Preview Foto -->
                             <div class="photo-preview" id="photoPreview-face" style="display:none;">
                                 <img id="previewImage-face" src="" alt="Preview">
-                                <button class="retake-btn" onclick="startCamera('face')" type="button">
-                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-                                    Ambil Ulang
-                                </button>
                             </div>
                         </div>
                         <input type="hidden" id="fotoData-face" name="foto_wajah_data">
@@ -187,10 +183,6 @@
                             <!-- Preview Foto -->
                             <div class="photo-preview" id="photoPreview-support" style="display:none;">
                                 <img id="previewImage-support" src="" alt="Preview">
-                                <button class="retake-btn" onclick="startCamera('support')" type="button">
-                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-                                    Ambil Ulang
-                                </button>
                             </div>
                         </div>
                         <input type="hidden" id="fotoData-support" name="foto_pendukung_data">
@@ -242,6 +234,22 @@ function togglePresensiDropdown(event) {
     return false;
 }
 
+// Dapatkan lokasi dengan timeout agar tidak menggantung UI
+function getLocationWithTimeout(timeout = 7000){
+    return new Promise((resolve) => {
+        if (!('geolocation' in navigator)) { return resolve({ ok:false, reason:'not_supported' }); }
+        let done = false;
+        const timer = setTimeout(()=>{ if(!done){ done=true; resolve({ ok:false, reason:'timeout' }); } }, timeout);
+        navigator.geolocation.getCurrentPosition((pos)=>{
+            if(done) return; done=true; clearTimeout(timer);
+            resolve({ ok:true, coords: pos.coords });
+        }, (err)=>{
+            if(done) return; done=true; clearTimeout(timer);
+            resolve({ ok:false, reason: err && err.code });
+        }, { enableHighAccuracy:true, timeout, maximumAge:0 });
+    });
+}
+
 // Close dropdown when clicking outside
 document.addEventListener('click', function(event) {
     if (!event.target.closest('.presensi-menu')) {
@@ -257,6 +265,18 @@ document.addEventListener('click', function(event) {
 
 // Camera logic (dual: face & support)
 let cameraStreams = { face: null, support: null };
+let currentAddress = '';
+
+async function fetchAddressForLembur(lat, lng){
+    try{
+        const res = await fetch(`{{ route('reverse.geocode') }}?lat=${lat}&lng=${lng}`);
+        const data = await res.json().catch(()=> ({}));
+        const address = (data && data.address) ? data.address : '';
+        currentAddress = address;
+        const alamatInput = document.getElementById('alamat');
+        if (alamatInput && address){ alamatInput.value = address; }
+    }catch(e){ currentAddress = ''; }
+}
 
 // Start camera with geolocation
 function startCamera(key) {
@@ -264,11 +284,21 @@ function startCamera(key) {
     const cameraArea = document.getElementById(`cameraArea-${key}`);
     const cameraPreview = document.getElementById(`cameraPreview-${key}`);
     const photoPreview = document.getElementById(`photoPreview-${key}`);
+    const cameraBtn = document.getElementById(`cameraBtn-${key}`);
 
     // Hide photo preview and show camera
     photoPreview.style.display = 'none';
     cameraArea.style.display = 'none';
     cameraPreview.style.display = 'block';
+
+    // Kembalikan tombol utama menjadi "Ambil Foto"
+    if (cameraBtn) {
+        cameraBtn.innerHTML = `
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Ambil Foto
+        `;
+        cameraBtn.classList.remove('completed');
+    }
 
     // Request geolocation permission first
     if (navigator.geolocation) {
@@ -278,6 +308,8 @@ function startCamera(key) {
                 document.getElementById('latitude').value = position.coords.latitude;
                 document.getElementById('longitude').value = position.coords.longitude;
                 console.log('Location access granted:', position.coords);
+                // Fetch human-readable address and prefill alamat field
+                fetchAddressForLembur(position.coords.latitude, position.coords.longitude);
                 
                 // After getting location, access camera
                 accessCamera(key);
@@ -314,6 +346,8 @@ function accessCamera(key) {
     .then(stream => {
         video.srcObject = stream;
         video.play();
+        // Simpan stream agar bisa dihentikan dengan benar
+        cameraStreams[key] = stream;
     })
     .catch(err => {
         console.error('Error accessing camera:', err);
@@ -356,13 +390,19 @@ function capturePhoto(key) {
     const lng = document.getElementById('longitude').value;
     
     if (lat && lng) {
+        const text = currentAddress && currentAddress.trim().length > 0
+            ? `Lokasi: ${currentAddress}`
+            : `Lokasi: ${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`;
+        const barH = 34;
         finalCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        finalCtx.fillRect(0, canvas.height, canvas.width, 30);
-        
+        finalCtx.fillRect(0, canvas.height, canvas.width, barH);
         finalCtx.font = '14px Arial';
         finalCtx.fillStyle = 'white';
         finalCtx.textAlign = 'left';
-        finalCtx.fillText(`Lokasi: ${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`, 10, canvas.height + 20);
+        // truncate to fit roughly within width
+        const maxChars = Math.floor(canvas.width / 10);
+        const drawText = text.length > maxChars ? text.slice(0, maxChars - 3) + '...' : text;
+        finalCtx.fillText(drawText, 10, canvas.height + 22);
     }
 
     // Convert to data URL
@@ -372,6 +412,16 @@ function capturePhoto(key) {
     document.getElementById(`previewImage-${key}`).src = dataUrl;
     document.getElementById(`photoPreview-${key}`).style.display = 'block';
     document.getElementById(`fotoData-${key}`).value = dataUrl;
+
+    // Ubah tombol utama menjadi "Ambil Ulang"
+    const cameraBtn = document.getElementById(`cameraBtn-${key}`);
+    if (cameraBtn) {
+        cameraBtn.innerHTML = `
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            Ambil Ulang
+        `;
+        cameraBtn.classList.remove('completed');
+    }
 
     // stop camera after capture
     stopCamera(key);
@@ -480,6 +530,19 @@ window.addEventListener('load', function() {
     const now = new Date();
     const timeString = now.toTimeString().slice(0, 5);
     document.getElementById('jam').value = timeString;
+
+    // Prefetch lokasi agar alamat terisi otomatis lebih cepat
+    getLocationWithTimeout().then(async(res)=>{
+        if(res && res.ok && res.coords){
+            const { latitude:lat, longitude:lng } = res.coords;
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+            await fetchAddressForLembur(lat, lng);
+        } else {
+            // Jika gagal, beri petunjuk ringan di konsol. Browser modern butuh HTTPS/localhost.
+            console.warn('Geolocation prefetch failed:', res && res.reason);
+        }
+    });
 
     // Start polling notifications
     startNotifPolling();

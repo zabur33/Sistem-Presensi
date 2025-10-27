@@ -222,13 +222,6 @@
                             <span id="timeText"></span>
                         </div>
                     </div>
-                    <button class="retake-btn" onclick="startCamera()">
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <polyline points="1 4 1 10 7 10"/>
-                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
-                        </svg>
-                        Ambil Ulang
-                    </button>
                 </div>
             </div>
 
@@ -332,6 +325,10 @@ let attendanceTimes = {
     kembali: null,
     kepulangan: null
 };
+
+// Konfigurasi jam kerja untuk luar kantor (penentuan telat/tepat waktu)
+const WORK_START = '08:00'; // format HH:MM (24 jam)
+const LATE_TOLERANCE_MIN = 0; // toleransi menit keterlambatan
 
 let currentLocation = null;
 let uploadedPhoto = null;
@@ -600,11 +597,23 @@ function handlePresensi(type) {
         Selesai
     `;
     
-    statusBadge.textContent = 'Presensi';
-    statusBadge.classList.add('completed');
-    timeDisplay.textContent = currentTime;
-    // start ticking live for this card
-    startLiveTime(`${type}-time`);
+    // Set status & waktu tampil
+    if (type === 'kedatangan') {
+        // Tentukan telat atau tepat waktu berdasarkan WORK_START
+        const [wsH, wsM] = WORK_START.split(':').map(n=>parseInt(n,10));
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), wsH, wsM + LATE_TOLERANCE_MIN, 0, 0);
+        const isLate = now.getTime() > start.getTime();
+        statusBadge.textContent = isLate ? 'Terlambat' : 'Tepat Waktu';
+        statusBadge.classList.add('completed');
+        timeDisplay.textContent = currentTime;
+        // Hentikan jam berjalan jika ada
+        if (liveTimers['kedatangan-time']) { clearInterval(liveTimers['kedatangan-time']); delete liveTimers['kedatangan-time']; }
+    } else {
+        statusBadge.textContent = 'Presensi';
+        statusBadge.classList.add('completed');
+        timeDisplay.textContent = currentTime;
+    }
     
     // Enable next button in sequence
     enableNextButton(type);
@@ -673,8 +682,8 @@ function loadPresensiState() {
             if (btnKmb) btnKmb.disabled = !breakStartAt;
         }
 
-        // Resume timers
-        if (attendanceState.kedatangan && !attendanceState.kepulangan) {
+        // Tampilkan jam berjalan hanya sebelum presensi kedatangan
+        if (!attendanceState.kedatangan) {
             startLiveTime('kedatangan-time');
         }
         if (breakStartAt) {
@@ -746,10 +755,25 @@ function startCamera() {
     const cameraArea = document.getElementById('cameraArea');
     const cameraPreview = document.getElementById('cameraPreview');
     const video = document.getElementById('cameraVideo');
+    const photoPreview = document.getElementById('photoPreview');
+    const cameraBtn = document.getElementById('cameraBtn');
     
     // Hide camera area and show preview
     cameraArea.style.display = 'none';
     cameraPreview.style.display = 'block';
+    // Hide previous photo preview if any (retake flow)
+    if (photoPreview) photoPreview.style.display = 'none';
+    // Set main button back to 'Ambil Foto'
+    if (cameraBtn) {
+        cameraBtn.innerHTML = `
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+            </svg>
+            Ambil Foto
+        `;
+        cameraBtn.classList.remove('completed');
+    }
     
     // Access camera with wider field of view and better quality
     const constraints = {
@@ -831,27 +855,29 @@ function capturePhoto() {
             const timeText = document.getElementById('timeText');
             const cameraStatus = document.getElementById('cameraStatus');
             const cameraBtn = document.getElementById('cameraBtn');
-            
+
             previewImage.src = e.target.result;
             timeText.textContent = getCurrentTime() + ' - ' + new Date().toLocaleDateString('id-ID');
             preview.style.display = 'block';
-            
+
             // Update camera status
             cameraStatus.innerHTML = '<span class="status-indicator completed">Foto Berhasil Diambil</span>';
+            // Ganti fungsi tombol utama menjadi 'Ambil Ulang'
             cameraBtn.innerHTML = `
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M9 12l2 2 4-4"/>
+                    <polyline points="1 4 1 10 7 10"/>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
                 </svg>
-                Foto Tersimpan
+                Ambil Ulang
             `;
-            cameraBtn.classList.add('completed');
-            
+            cameraBtn.classList.remove('completed');
+
             uploadedPhoto = blob;
-            getCurrentLocation(); // Auto-detect location when photo is taken
-            enableAttendanceButtons(); // Enable attendance buttons after photo is taken
+            getCurrentLocation();
+            enableAttendanceButtons();
             tryUploadProofIfReady();
-            
-            // Stop camera and hide preview
+
+            // Stop camera and hide preview area
             stopCamera();
             document.getElementById('cameraArea').style.display = 'block';
         };
@@ -1037,6 +1063,12 @@ window.addEventListener('load', function() {
     if (typeof loadPresensiState === 'function') {
         loadPresensiState();
     }
+    // Jika belum presensi kedatangan, mulai jam real-time di kartu Kedatangan
+    try {
+        if (!attendanceState.kedatangan) {
+            startLiveTime('kedatangan-time');
+        }
+    } catch {}
     // Start polling notifications
     if (typeof startNotifPolling === 'function') startNotifPolling();
 });

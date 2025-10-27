@@ -77,7 +77,7 @@
             </div>
 
             <div class="attendance-grid">
-                
+
                 <!-- Kedatangan -->
                 <div class="attendance-card">
                     <div class="card-header">
@@ -209,6 +209,10 @@ let attendanceTimes = {
     kembali: null,
     kepulangan: null
 };
+
+// Konfigurasi jam kerja (untuk penentuan telat/tepat waktu)
+const WORK_START = '08:00'; // format HH:MM (24 jam)
+const LATE_TOLERANCE_MIN = 0; // toleransi menit keterlambatan, 0 berarti tepat 08:00
 
 function getCurrentTime() {
     const now = new Date();
@@ -439,11 +443,24 @@ function handlePresensi(type) {
         Selesai
     `;
 
-    statusBadge.textContent = 'Presensi';
-    statusBadge.classList.add('completed');
-    timeDisplay.textContent = currentTime;
-    // Start live ticking for the displayed time
-    startLiveTime(`${type}-time`);
+    // Set status badge dan waktu tampil
+    if (type === 'kedatangan') {
+        // Tentukan telat atau tepat waktu berdasarkan WORK_START
+        const [wsH, wsM] = WORK_START.split(':').map(n=>parseInt(n,10));
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), wsH, wsM + LATE_TOLERANCE_MIN, 0, 0);
+        const isLate = now.getTime() > start.getTime();
+        statusBadge.textContent = isLate ? 'Terlambat' : 'Tepat Waktu';
+        statusBadge.classList.add('completed');
+        timeDisplay.textContent = currentTime;
+        // Pastikan jam kedatangan tidak terus berjalan setelah dicatat
+        if (liveTimers['kedatangan-time']) { clearInterval(liveTimers['kedatangan-time']); delete liveTimers['kedatangan-time']; }
+    } else {
+        statusBadge.textContent = 'Presensi';
+        statusBadge.classList.add('completed');
+        timeDisplay.textContent = currentTime;
+    }
+    // Jangan menyalakan ticking setelah waktu dicatat (biarkan statis)
 
     // Enable next button in sequence
     enableNextButton(type);
@@ -528,8 +545,8 @@ function loadPresensiState() {
             }, 1000);
         }
 
-        // Resume live ticking for kedatangan if belum kepulangan
-        if (attendanceState.kedatangan && !attendanceState.kepulangan) {
+        // Jika belum presensi kedatangan, tampilkan jam berjalan real-time pada kartu Kedatangan
+        if (!attendanceState.kedatangan) {
             startLiveTime('kedatangan-time');
         }
     } catch {}
@@ -579,7 +596,7 @@ function closeModal() {
 function submitReport() {
     const problemInput = document.getElementById('problem-text');
     const message = (problemInput.value || '').trim();
-    if (message === '' || message === 'Istirahat') {
+    if (message === '' || message === '') {
         alert('Silakan masukkan deskripsi masalah terlebih dahulu.');
         return;
     }
@@ -600,7 +617,7 @@ function submitReport() {
         return res.json().catch(()=> ({}));
     }).then(()=>{
         alert('Laporan berhasil dikirim. Admin akan mendapatkan notifikasi.');
-        problemInput.value = 'Istirahat';
+        problemInput.value = '';
         problemInput.readOnly = true;
     }).catch(err=>{
         alert('Tidak dapat mengirim laporan saat ini. Coba lagi nanti.');
@@ -610,7 +627,7 @@ function submitReport() {
 
 // Make problem textarea editable when clicked
 document.getElementById('problem-text').addEventListener('focus', function() {
-    if (this.value === 'Istirahat') {
+    if (this.value === '') {
         this.value = '';
     }
     this.readOnly = false;
@@ -618,7 +635,7 @@ document.getElementById('problem-text').addEventListener('focus', function() {
 
 document.getElementById('problem-text').addEventListener('blur', function() {
     if (this.value.trim() === '') {
-        this.value = 'Istirahat';
+        this.value = '';
         this.readOnly = true;
     }
 });
@@ -641,6 +658,12 @@ window.addEventListener('load', function() {
     if (typeof loadPresensiState === 'function') {
         loadPresensiState();
     }
+    // Jika user baru membuka halaman dan belum presensi kedatangan, mulai jam real-time
+    try {
+        if (!attendanceState.kedatangan) {
+            startLiveTime('kedatangan-time');
+        }
+    } catch {}
 });
 
 // Close modal when clicking outside
