@@ -97,8 +97,10 @@
                             <input type="text" id="nama" name="nama" placeholder="Masukkan nama lengkap">
                         </div>
                         <div class="form-group">
-                            <label for="alamat">Alamat</label>
-                            <input type="text" id="alamat" name="alamat" placeholder="https://location">
+                            <label for="alamat" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                                <span>Alamat</span>
+                            </label>
+                            <input type="text" id="alamat" name="alamat" placeholder="Lokasi akan terisi otomatis saat izin lokasi diberikan">
                         </div>
                         <div class="form-group">
                             <label for="jam">Jam</label>
@@ -274,8 +276,20 @@ async function fetchAddressForLembur(lat, lng){
         const address = (data && data.address) ? data.address : '';
         currentAddress = address;
         const alamatInput = document.getElementById('alamat');
-        if (alamatInput && address){ alamatInput.value = address; }
-    }catch(e){ currentAddress = ''; }
+        if (alamatInput){
+            if (address && address.trim().length>0){
+                alamatInput.value = address;
+            } else {
+                alamatInput.value = `${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`;
+            }
+        }
+    }catch(e){
+        currentAddress = '';
+        const alamatInput = document.getElementById('alamat');
+        if (alamatInput && lat!=null && lng!=null){
+            alamatInput.value = `${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`;
+        }
+    }
 }
 
 // Start camera with geolocation
@@ -310,7 +324,7 @@ function startCamera(key) {
                 console.log('Location access granted:', position.coords);
                 // Fetch human-readable address and prefill alamat field
                 fetchAddressForLembur(position.coords.latitude, position.coords.longitude);
-                
+
                 // After getting location, access camera
                 accessCamera(key);
             },
@@ -318,6 +332,10 @@ function startCamera(key) {
                 console.error('Error getting location:', error);
                 alert('Tidak dapat mengakses lokasi. Beberapa fitur mungkin tidak berfungsi dengan baik.');
                 // Continue with camera access even if location is denied
+                // Try to use any existing lat/lng captured earlier
+                const latVal = document.getElementById('latitude').value;
+                const lngVal = document.getElementById('longitude').value;
+                if (latVal && lngVal){ fetchAddressForLembur(latVal, lngVal); }
                 accessCamera(key);
             },
             {
@@ -335,13 +353,13 @@ function startCamera(key) {
 // Access camera function
 function accessCamera(key) {
     const video = document.getElementById(`cameraVideo-${key}`);
-    
-    navigator.mediaDevices.getUserMedia({ 
-        video: { 
+
+    navigator.mediaDevices.getUserMedia({
+        video: {
             width: { ideal: 1280 },
             height: { ideal: 720 },
             facingMode: key === 'face' ? 'user' : 'environment'
-        } 
+        }
     })
     .then(stream => {
         video.srcObject = stream;
@@ -381,14 +399,14 @@ function capturePhoto(key) {
     finalCanvas.width = canvas.width;
     finalCanvas.height = canvas.height + 30; // Extra space for location text
     const finalCtx = finalCanvas.getContext('2d');
-    
+
     // Draw the original image
     finalCtx.drawImage(canvas, 0, 0);
-    
+
     // Add location info at the bottom
     const lat = document.getElementById('latitude').value;
     const lng = document.getElementById('longitude').value;
-    
+
     if (lat && lng) {
         const text = currentAddress && currentAddress.trim().length > 0
             ? `Lokasi: ${currentAddress}`
@@ -407,11 +425,31 @@ function capturePhoto(key) {
 
     // Convert to data URL
     const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.85);
-    
+
     // Update preview and form data
     document.getElementById(`previewImage-${key}`).src = dataUrl;
-    document.getElementById(`photoPreview-${key}`).style.display = 'block';
+    const previewEl = document.getElementById(`photoPreview-${key}`);
+    // Move preview into the camera card above the action button
+    try {
+        const cameraBtn = document.getElementById(`cameraBtn-${key}`);
+        const cameraCard = cameraBtn ? cameraBtn.closest('.camera-card') : null;
+        if (cameraCard && previewEl && previewEl.parentElement !== cameraCard) {
+            cameraCard.insertBefore(previewEl, cameraBtn);
+        }
+    } catch {}
+    previewEl.style.display = 'block';
     document.getElementById(`fotoData-${key}`).value = dataUrl;
+    // Pastikan input alamat terisi bila masih kosong
+    const alamatInput = document.getElementById('alamat');
+    if (alamatInput && (!alamatInput.value || alamatInput.value.trim()==='')){
+        const latVal = document.getElementById('latitude').value;
+        const lngVal = document.getElementById('longitude').value;
+        if (currentAddress && currentAddress.trim().length>0){
+            alamatInput.value = currentAddress;
+        } else if (latVal && lngVal){
+            alamatInput.value = `${parseFloat(latVal).toFixed(6)}, ${parseFloat(lngVal).toFixed(6)}`;
+        }
+    }
 
     // Ubah tombol utama menjadi "Ambil Ulang"
     const cameraBtn = document.getElementById(`cameraBtn-${key}`);
@@ -423,8 +461,10 @@ function capturePhoto(key) {
         cameraBtn.classList.remove('completed');
     }
 
-    // stop camera after capture
+    // stop camera after capture, but keep camera area hidden so preview fills the box
     stopCamera(key);
+    const cameraArea = document.getElementById(`cameraArea-${key}`);
+    if (cameraArea) cameraArea.style.display = 'none';
 }
 
 // CSRF helper

@@ -287,6 +287,19 @@ function getCsrfToken() {
     return el ? el.getAttribute('content') : '';
 }
 
+// Storage key helpers - namespace by user and date
+function getTodayKey() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+}
+function storageKey() {
+    const uid = (typeof window !== 'undefined' && window.LARAVEL_USER_ID) ? window.LARAVEL_USER_ID : ({{ auth()->id() ?? 'null' }});
+    return `presensi-luar-state:${uid}:${getTodayKey()}`;
+}
+
 // Multipart upload helper
 async function postForm(url, formData) {
     const res = await fetch(url, {
@@ -396,11 +409,19 @@ function formatMMSS(ms) {
 }
 
 function updateBreakDisplays(remainingMs, elapsedMs) {
-    // In luar-kantor: 'istirahat-time' shows remaining, 'kembali-time' shows elapsed of current session
-    const remainEl = document.getElementById('istirahat-time');
-    const elapsedEl = document.getElementById('kembali-time');
-    if (remainEl) remainEl.textContent = formatMMSS(remainingMs);
-    if (elapsedEl) elapsedEl.textContent = formatMMSS(elapsedMs);
+    // Make Istirahat card run (show elapsed), and Kembali card show remaining quota
+    const istirahatEl = document.getElementById('istirahat-time'); // should count up
+    const kembaliEl   = document.getElementById('kembali-time');   // show remaining
+    if (istirahatEl) istirahatEl.textContent = formatMMSS(elapsedMs);
+    if (kembaliEl)   kembaliEl.textContent   = formatMMSS(remainingMs);
+}
+
+// After user presses Kembali: show REMAINING on Istirahat card, reset Kembali to 00:00
+function setBreakDisplaysAfterReturn(remainingMs) {
+    const istirahatEl = document.getElementById('istirahat-time');
+    const kembaliEl   = document.getElementById('kembali-time');
+    if (istirahatEl) istirahatEl.textContent = formatMMSS(Math.max(0, remainingMs));
+    if (kembaliEl)   kembaliEl.textContent   = '00:00';
 }
 
 function startBreak() {
@@ -437,7 +458,8 @@ function finishBreak() {
     if (breakInterval) { clearInterval(breakInterval); breakInterval = null; }
 
     const remaining = BREAK_QUOTA_MS - breakUsedMs;
-    updateBreakDisplays(Math.max(0, remaining), 0);
+    // After finishing break, show remaining on Istirahat card to avoid confusion
+    setBreakDisplaysAfterReturn(remaining);
 
     // Late detection on return card's badge (kembali-status)
     const returnStatus = document.getElementById('kembali-status');
@@ -463,9 +485,6 @@ function stopAllTimers() {
     if (breakInterval) { clearInterval(breakInterval); breakInterval = null; }
 }
 
-// Flag to trigger full reset after kepulangan
-let pendingReset = false;
-
 // Reset state and UI so user can start a fresh luar-kantor attendance
 function resetPresensiStateAndUI() {
     try {
@@ -484,7 +503,7 @@ function resetPresensiStateAndUI() {
         proofUploaded = false;
 
         // Clear persisted state
-        localStorage.removeItem('presensi-luar-state');
+        localStorage.removeItem(storageKey());
 
         // Badges back to default
         ['kedatangan','istirahat','kembali','kepulangan'].forEach(type => {
@@ -571,6 +590,10 @@ function handlePresensi(type) {
     if (type === 'kepulangan') {
         // sync checkout
         postJSON('{{ route('attendance.checkout') }}', { location_type: 'luar_kantor', client_time: currentTime }).catch(() => {});
+        // Freeze Kedatangan at checkout time and stop timers
+        const ked = document.getElementById('kedatangan-time');
+        if (ked) kedatanganDisplayBeforeFreeze = ked.textContent;
+        if (ked) ked.textContent = currentTime;
         stopAllTimers();
         const timeDisplay = document.getElementById('kepulangan-time');
         if (timeDisplay) timeDisplay.textContent = currentTime;
@@ -578,7 +601,7 @@ function handlePresensi(type) {
         attendanceState[type] = true;
         attendanceTimes[type] = currentTime;
         savePresensiState();
-        pendingReset = true; // trigger reset after user closes modal
+        // Keep recorded times visible; do not trigger auto reset
         showSuccessModal(type, currentTime);
         return;
     }
@@ -606,9 +629,8 @@ function handlePresensi(type) {
         const isLate = now.getTime() > start.getTime();
         statusBadge.textContent = isLate ? 'Terlambat' : 'Tepat Waktu';
         statusBadge.classList.add('completed');
-        timeDisplay.textContent = currentTime;
-        // Hentikan jam berjalan jika ada
-        if (liveTimers['kedatangan-time']) { clearInterval(liveTimers['kedatangan-time']); delete liveTimers['kedatangan-time']; }
+        // Start ticking kedatangan time until checkout
+        startLiveTime('kedatangan-time');
     } else {
         statusBadge.textContent = 'Presensi';
         statusBadge.classList.add('completed');
@@ -638,12 +660,14 @@ function savePresensiState() {
         breakUsedMs,
         breakStartAt,
     };
-    localStorage.setItem('presensi-luar-state', JSON.stringify(state));
+    localStorage.setItem(storageKey(), JSON.stringify(state));
 }
 
 function loadPresensiState() {
     try {
-        const raw = localStorage.getItem('presensi-luar-state');
+        // Cleanup legacy key once
+        try { localStorage.removeItem('presensi-luar-state'); } catch {}
+        const raw = localStorage.getItem(storageKey());
         if (!raw) return;
         const s = JSON.parse(raw);
         if (s.attendanceState) attendanceState = s.attendanceState;
@@ -661,8 +685,11 @@ function loadPresensiState() {
             if (attendanceState[type] && btn) {
                 btn.disabled = true;
                 btn.classList.add('completed');
-                btn.innerHTML = `\n        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">\n            <path d="M9 12l2 2 4-4"/>\n        </svg>\n        Selesai\n    `;
+                btn.innerHTML = `\n        <svg fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" viewBox=\"0 0 24 24\">\n            <path d=\"M9 12l2 2 4-4\"/>\n        </svg>\n        Selesai\n    `;
                 if (status) status.classList.add('completed');
+            }
+            if (type === 'kedatangan' && attendanceState.kedatangan && !attendanceState.kepulangan) {
+                startLiveTime('kedatangan-time');
             }
         });
 
@@ -682,8 +709,10 @@ function loadPresensiState() {
             if (btnKmb) btnKmb.disabled = !breakStartAt;
         }
 
-        // Tampilkan jam berjalan hanya sebelum presensi kedatangan
+        // Kedatangan clock rules: before check-in run; after check-in keep running until checkout
         if (!attendanceState.kedatangan) {
+            startLiveTime('kedatangan-time');
+        } else if (attendanceState.kedatangan && !attendanceState.kepulangan) {
             startLiveTime('kedatangan-time');
         }
         if (breakStartAt) {
@@ -741,10 +770,6 @@ function showSuccessModal(type, time) {
 
 function closeModal() {
     document.getElementById('successModal').style.display = 'none';
-    if (pendingReset) {
-        pendingReset = false;
-        resetPresensiStateAndUI();
-    }
 }
 
 // Camera Functions
@@ -858,6 +883,14 @@ function capturePhoto() {
 
             previewImage.src = e.target.result;
             timeText.textContent = getCurrentTime() + ' - ' + new Date().toLocaleDateString('id-ID');
+            // Move preview INTO the camera box, positioned above the action button
+            try {
+                const cameraCard = document.querySelector('.camera-section .camera-card');
+                const cameraBtnEl = document.getElementById('cameraBtn');
+                if (cameraCard && cameraBtnEl && preview && preview.parentElement !== cameraCard) {
+                    cameraCard.insertBefore(preview, cameraBtnEl);
+                }
+            } catch {}
             preview.style.display = 'block';
 
             // Update camera status
@@ -877,9 +910,9 @@ function capturePhoto() {
             enableAttendanceButtons();
             tryUploadProofIfReady();
 
-            // Stop camera and hide preview area
+            // Stop camera and keep camera area hidden so preview occupies the box
             stopCamera();
-            document.getElementById('cameraArea').style.display = 'block';
+            document.getElementById('cameraArea').style.display = 'none';
         };
         reader.readAsDataURL(blob);
     }, 'image/jpeg', 0.8);

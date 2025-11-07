@@ -6,9 +6,32 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Attendance;
 // use Illuminate\Support\Carbon; // not used
+use Carbon\Carbon;
 
 class AttendanceSyncController extends Controller
 {
+    /**
+     * Build a Carbon datetime based on today's date in the given timezone
+     * and the provided client_time (HH:MM:SS). Fallback to now($tz).
+     */
+    private function resolveClientDateTime(?string $clientTime, string $tz): Carbon
+    {
+        try {
+            if ($clientTime && preg_match('/^\d{2}:\d{2}(?::\d{2})?$/', $clientTime)) {
+                // Normalize to HH:MM:SS
+                if (strlen($clientTime) === 5) { // HH:MM
+                    $clientTime .= ':00';
+                }
+                $today = now($tz)->toDateString();
+                $dt = Carbon::createFromFormat('Y-m-d H:i:s', $today . ' ' . $clientTime, $tz);
+                return $dt ?: now($tz);
+            }
+        } catch (\Throwable $e) {
+            // ignore and fallback
+        }
+        return now($tz);
+    }
+
     public function checkIn(Request $request)
     {
         $user = Auth::user();
@@ -18,10 +41,10 @@ class AttendanceSyncController extends Controller
 
         $request->validate([
             'location_type' => 'required|in:kantor,luar_kantor',
-            'client_time' => 'nullable|string',
+            'client_time' => 'nullable|string', // expected format HH:MM:SS
         ]);
-
-        $today = now()->toDateString();
+        $tz = config('app.timezone') ?: 'UTC';
+        $today = now($tz)->toDateString();
         $location = $request->input('location_type');
 
         // Find or create today's attendance for this user
@@ -35,12 +58,10 @@ class AttendanceSyncController extends Controller
 
         // If already checked in, keep original time_in
         if (!$attendance->time_in) {
-            $attendance->time_in = now();
+            $attendance->time_in = $this->resolveClientDateTime($request->input('client_time'), $tz);
         }
-        // Update location if not set yet
-        if (!$attendance->location_type) {
-            $attendance->location_type = $location;
-        }
+        // Always set/update location type based on current request context
+        $attendance->location_type = $location;
         // Ensure status is set
         if (!$attendance->status) {
             $attendance->status = 'Hadir';
@@ -64,32 +85,32 @@ class AttendanceSyncController extends Controller
 
         $request->validate([
             'location_type' => 'required|in:kantor,luar_kantor',
-            'client_time' => 'nullable|string',
+            'client_time' => 'nullable|string', // expected format HH:MM:SS
         ]);
-
-        $today = now()->toDateString();
+        $tz = config('app.timezone') ?: 'UTC';
+        $today = now($tz)->toDateString();
         $attendance = Attendance::where('user_id', $user->id)
             ->where('date', $today)
             ->first();
 
         if (!$attendance) {
             // If no check-in yet, create then set both times
+            $checkoutAt = $this->resolveClientDateTime($request->input('client_time'), $tz);
             $attendance = Attendance::create([
                 'user_id' => $user->id,
                 'date' => $today,
                 'status' => 'Hadir',
                 'location_type' => $request->input('location_type'),
-                'time_in' => now(),
-                'time_out' => now(),
+                'time_in' => $checkoutAt,
+                'time_out' => $checkoutAt,
             ]);
         } else {
             if (!$attendance->time_in) {
-                $attendance->time_in = now();
+                $attendance->time_in = $this->resolveClientDateTime($request->input('client_time'), $tz);
             }
-            $attendance->time_out = now();
-            if (!$attendance->location_type) {
-                $attendance->location_type = $request->input('location_type');
-            }
+            $attendance->time_out = $this->resolveClientDateTime($request->input('client_time'), $tz);
+            // Always set/update location type based on current request context
+            $attendance->location_type = $request->input('location_type');
             if (!$attendance->status) {
                 $attendance->status = 'Hadir';
             }
@@ -120,15 +141,13 @@ class AttendanceSyncController extends Controller
             'accuracy' => 'nullable|numeric|min:0',
         ]);
 
-        $today = now()->toDateString();
+        $tz = config('app.timezone') ?: 'UTC';
+        $today = now($tz)->toDateString();
         $attendance = Attendance::firstOrCreate(
             ['user_id' => $user->id, 'date' => $today],
             ['status' => 'Hadir', 'location_type' => $request->input('location_type')]
         );
 
-        if (!$attendance->time_in) {
-            $attendance->time_in = now();
-        }
 
         // Only store photo for luar_kantor
         if ($request->input('location_type') === 'luar_kantor' && $request->hasFile('photo')) {
@@ -147,9 +166,8 @@ class AttendanceSyncController extends Controller
         if ($request->input('location_type') === 'luar_kantor' && $request->filled('activity_text')) {
             $attendance->activity_text = $request->input('activity_text');
         }
-        if (!$attendance->location_type) {
-            $attendance->location_type = $request->input('location_type');
-        }
+        // Always set/update location type based on current request context
+        $attendance->location_type = $request->input('location_type');
         if (!$attendance->status) {
             $attendance->status = 'Hadir';
         }

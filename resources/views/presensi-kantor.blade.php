@@ -184,6 +184,19 @@ function getCsrfToken() {
     return el ? el.getAttribute('content') : '';
 }
 
+// Storage key helpers - namespace by user and date
+function getTodayKey() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+}
+function storageKey() {
+    const uid = (typeof window !== 'undefined' && window.LARAVEL_USER_ID) ? window.LARAVEL_USER_ID : ({{ auth()->id() ?? 'null' }});
+    return `presensi-kantor-state:${uid}:${getTodayKey()}`;
+}
+
 async function postJSON(url, data) {
     const res = await fetch(url, {
         method: 'POST',
@@ -249,10 +262,20 @@ function formatMMSS(ms) {
 }
 
 function updateBreakDisplays(remainingMs, elapsedMs) {
-    const remainingEl = document.getElementById('kembali-time'); // card: Istirahat (remaining)
-    const elapsedEl   = document.getElementById('istirahat-time'); // card: Kembali (elapsed)
-    if (remainingEl) remainingEl.textContent = formatMMSS(remainingMs);
-    if (elapsedEl)   elapsedEl.textContent   = formatMMSS(elapsedMs);
+    // Show ELAPSED on the Istirahat card (second card: id='kembali-time' in markup)
+    // Show REMAINING on the Kembali card (third card: id='istirahat-time')
+    const istirahatCardEl = document.getElementById('kembali-time'); // should count up
+    const kembaliCardEl   = document.getElementById('istirahat-time'); // show remaining quota
+    if (istirahatCardEl) istirahatCardEl.textContent = formatMMSS(elapsedMs);
+    if (kembaliCardEl)   kembaliCardEl.textContent   = formatMMSS(remainingMs);
+}
+
+// After user presses Kembali: show REMAINING on Istirahat card, and reset Kembali card to 00:00
+function setBreakDisplaysAfterReturn(remainingMs) {
+    const istirahatCardEl = document.getElementById('kembali-time'); // Istirahat card
+    const kembaliCardEl   = document.getElementById('istirahat-time'); // Kembali card
+    if (istirahatCardEl) istirahatCardEl.textContent = formatMMSS(Math.max(0, remainingMs));
+    if (kembaliCardEl)   kembaliCardEl.textContent   = '00:00';
 }
 
 function startBreak() {
@@ -281,7 +304,7 @@ function startBreak() {
         updateBreakDisplays(remaining, sessionElapsed);
     }, 1000);
 
-    // immediate paint
+    // immediate paint: elapsed starts at 0 on Istirahat card
     updateBreakDisplays(remainingAllowance, 0);
 }
 
@@ -297,7 +320,8 @@ function finishBreak() {
     if (breakInterval) { clearInterval(breakInterval); breakInterval = null; }
 
     const remaining = BREAK_QUOTA_MS - breakUsedMs;
-    updateBreakDisplays(Math.max(0, remaining), 0);
+    // After finishing break, show remaining on Istirahat card to avoid confusion
+    setBreakDisplaysAfterReturn(remaining);
 
     // Late detection (over quota)
     const statusReturn = document.getElementById('istirahat-status');
@@ -325,9 +349,6 @@ function stopAllTimers() {
     if (breakInterval) { clearInterval(breakInterval); breakInterval = null; }
 }
 
-// Flag to trigger full reset after kepulangan
-let pendingReset = false;
-
 // Reset state and UI to initial so user can presensi again
 function resetPresensiStateAndUI() {
     try {
@@ -340,7 +361,7 @@ function resetPresensiStateAndUI() {
         breakStartAt = null;
 
         // Clear persisted state
-        localStorage.removeItem('presensi-kantor-state');
+        localStorage.removeItem(storageKey());
 
         // Restore badges
         ['kedatangan','kembali','istirahat','kepulangan'].forEach(type => {
@@ -410,7 +431,9 @@ function handlePresensi(type) {
     if (type === 'kepulangan') {
         // Sync checkout to backend
         postJSON('{{ route('attendance.checkout') }}', { location_type: 'kantor', client_time: currentTime }).catch(() => {});
-        // Stop all timers and set static time for kepulangan
+        // Freeze Kedatangan at checkout time and stop timers
+        const ked = document.getElementById('kedatangan-time');
+        if (ked) ked.textContent = currentTime;
         stopAllTimers();
         if (timeDisplay) timeDisplay.textContent = currentTime;
         // disable other action buttons
@@ -422,9 +445,10 @@ function handlePresensi(type) {
         // save and exit without starting live timer
         attendanceState[type] = true;
         attendanceTimes[type] = currentTime;
+        // persist frozen kedatangan time as well
+        attendanceTimes['kedatangan'] = currentTime;
         savePresensiState();
-        // Show success modal
-        pendingReset = true; // trigger reset after user closes modal
+        // Show success modal (do not reset automatically; keep recorded times visible)
         showSuccessModal(type, currentTime);
         return;
     }
@@ -452,9 +476,8 @@ function handlePresensi(type) {
         const isLate = now.getTime() > start.getTime();
         statusBadge.textContent = isLate ? 'Terlambat' : 'Tepat Waktu';
         statusBadge.classList.add('completed');
-        timeDisplay.textContent = currentTime;
-        // Pastikan jam kedatangan tidak terus berjalan setelah dicatat
-        if (liveTimers['kedatangan-time']) { clearInterval(liveTimers['kedatangan-time']); delete liveTimers['kedatangan-time']; }
+        // Start ticking kedatangan time until checkout
+        startLiveTime('kedatangan-time');
     } else {
         statusBadge.textContent = 'Presensi';
         statusBadge.classList.add('completed');
@@ -485,12 +508,12 @@ function savePresensiState() {
         breakUsedMs,
         breakStartAt,
     };
-    localStorage.setItem('presensi-kantor-state', JSON.stringify(state));
+    localStorage.setItem(storageKey(), JSON.stringify(state));
 }
 
 function loadPresensiState() {
     try {
-        const raw = localStorage.getItem('presensi-kantor-state');
+        const raw = localStorage.getItem(storageKey());
         if (!raw) return;
         const s = JSON.parse(raw);
         if (s.attendanceState) attendanceState = s.attendanceState;
@@ -508,8 +531,11 @@ function loadPresensiState() {
             if (attendanceState[type] && btn) {
                 btn.disabled = true;
                 btn.classList.add('completed');
-                btn.innerHTML = `\n        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">\n            <path d="M9 12l2 2 4-4"/>\n        </svg>\n        Selesai\n    `;
+                btn.innerHTML = `\n        <svg fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" viewBox=\"0 0 24 24\">\n            <path d=\"M9 12l2 2 4-4\"/>\n        </svg>\n        Selesai\n    `;
                 if (statusBadge) statusBadge.classList.add('completed');
+            }
+            if (type === 'kedatangan' && attendanceState.kedatangan && !attendanceState.kepulangan) {
+                startLiveTime('kedatangan-time');
             }
         });
 
@@ -545,8 +571,13 @@ function loadPresensiState() {
             }, 1000);
         }
 
-        // Jika belum presensi kedatangan, tampilkan jam berjalan real-time pada kartu Kedatangan
+        // Kedatangan clock rules
+        // - Before check-in: run live clock
+        // - After check-in and before checkout: keep running
+        // - After checkout: do not run
         if (!attendanceState.kedatangan) {
+            startLiveTime('kedatangan-time');
+        } else if (attendanceState.kedatangan && !attendanceState.kepulangan) {
             startLiveTime('kedatangan-time');
         }
     } catch {}
@@ -585,11 +616,6 @@ function showSuccessModal(type, time) {
 
 function closeModal() {
     document.getElementById('successModal').style.display = 'none';
-    if (pendingReset) {
-        pendingReset = false;
-        // After kepulangan, reset all so new presensi can begin immediately
-        resetPresensiStateAndUI();
-    }
 }
 
 

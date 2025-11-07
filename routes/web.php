@@ -16,6 +16,7 @@ use App\Http\Controllers\AttendanceSyncController;
 use App\Http\Controllers\UserRecapController;
 use App\Http\Controllers\Admin\EmployeeRegistrationController;
 use App\Http\Controllers\ReverseGeocodeController;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     return view('login');
@@ -57,6 +58,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', function () {
         return view('profile');
     })->name('profile');
+
+    // Dashboard metrics API (JSON for charts)
+    Route::get('/api/dashboard/metrics', [DashboardController::class, 'metrics'])->name('dashboard.metrics');
 
     // Edit Profile route
     Route::get('/edit-profile', function () {

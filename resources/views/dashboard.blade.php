@@ -346,19 +346,19 @@
                 <div class="stats-grid">
                     <div class="stat-card total">
                         <h4>Total Hari Kerja</h4>
-                        <div class="value">22</div>
+                        <div class="value" id="totalWorkdaysVal">22</div>
                     </div>
                     <div class="stat-card present">
                         <h4>Kehadiran Bulan Ini</h4>
-                        <div class="value">20 Hari</div>
+                        <div class="value" id="presentVal">-</div>
                     </div>
                     <div class="stat-card remote">
                         <h4>WFH / Dinas Luar</h4>
-                        <div class="value">6 Hari</div>
+                        <div class="value" id="remoteVal">-</div>
                     </div>
                     <div class="stat-card late">
                         <h4>Keterlambatan</h4>
-                        <div class="value">2x</div>
+                        <div class="value" id="lateVal">-</div>
                     </div>
                 </div>
 
@@ -405,8 +405,8 @@
                                     <i class="fas fa-map-marker-alt"></i>
                                 </div>
                                 <div class="location-details">
-                                    <h3>Kantor Pusat</h3>
-                                    <p>Check-in: 08:12 | Check-out: 17:04</p>
+                                    <h3 id="todayLocation">-</h3>
+                                    <p id="todayTimes">Check-in: — | Check-out: —</p>
                                 </div>
                             </div>
                             <button class="checkout-btn">Check Out</button>
@@ -486,30 +486,8 @@
         const attendanceChart = new Chart(attendanceCtx, {
             type: 'bar',
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr'],
-                datasets: [
-                    {
-                        label: 'Dinas',
-                        data: [3, 2, 1, 2],
-                        backgroundColor: '#f59e0b',
-                        borderRadius: 6,
-                        barThickness: 30
-                    },
-                    {
-                        label: 'Hadir',
-                        data: [20, 18, 22, 21],
-                        backgroundColor: '#10b981',
-                        borderRadius: 6,
-                        barThickness: 30
-                    },
-                    {
-                        label: 'WFH',
-                        data: [5, 6, 4, 5],
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 6,
-                        barThickness: 30
-                    }
-                ]
+                labels: ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],
+                datasets: []
             },
             options: {
                 responsive: true,
@@ -546,7 +524,7 @@
             data: {
                 labels: ['Hadir', 'WFH', 'Dinas Luar'],
                 datasets: [{
-                    data: [60, 25, 15],
+                    data: [0, 0, 0],
                     backgroundColor: [
                         '#10b981',
                         '#3b82f6',
