@@ -23,7 +23,7 @@
             </a></li>
             <li><a href="/admin/validasi-monitoring" class="{{ request()->is('admin/validasi-monitoring') ? 'active' : '' }}">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
-                Validasi & Monitoring
+                Monitoring
             </a></li>
             <li><a href="/admin/registrasi-pegawai" class="{{ request()->is('admin/registrasi-pegawai') ? 'active' : '' }}">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/><path d="M19 10h3m-1.5-1.5V11.5"/></svg>

@@ -2,8 +2,8 @@
 
 @section('content')
 <div class="page-title" style="margin-bottom:18px;">
-    <h1 style="font-weight:800; font-size:28px;">Validasi & Monitoring</h1>
-    <p style="color:#7a7a7a; margin-top:6px;">Validasi catatan presensi, pantau status, dan filter berdasarkan periode.</p>
+    <h1 style="font-weight:800; font-size:28px;">Monitoring</h1>
+    <p style="color:#7a7a7a; margin-top:6px;"> Pantau status, dan filter berdasarkan periode.</p>
 </div>
 
 <!-- Filters -->

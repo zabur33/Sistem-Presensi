@@ -6,22 +6,6 @@
     <p style="color:#7a7a7a; margin-top:6px;">Lihat, cari, dan kelola akun pegawai.</p>
 </div>
 
-<!-- Highlight Card (first employee or placeholder) -->
-@php $first = optional($employees ?? null)->first(); @endphp
-<div class="emp-highlight" style="background:#f4e9e4;border:1px solid #e3d6cf;border-radius:18px;padding:18px 22px;display:flex;align-items:center;gap:16px;max-width:980px;">
-    <div style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:3px solid #e07a5f;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:#fff;">
-        @if($first && $first->avatar_url)
-            <img src="{{ $first->avatar_url }}" alt="Foto Pegawai" style="width:100%;height:100%;object-fit:cover;">
-        @else
-            <svg viewBox="0 0 24 24" width="28" height="28" stroke="#c04d5b" fill="none" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a7.5 7.5 0 0 1 13 0"/></svg>
-        @endif
-    </div>
-    <div style="line-height:1.25;">
-        <div style="font-weight:800;font-size:20px;">{{ $first?->user?->name ?? '—' }}</div>
-        <div style="color:#6b6b6b;">{{ $first?->position ?? '—' }}</div>
-    </div>
-</div>
-
 <!-- Search -->
 <form method="GET" action="{{ route('admin.kelola-pegawai') }}" style="margin:16px 0 10px;display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;">
     <div style="position:relative;">
@@ -57,12 +41,78 @@
         .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:600}
         .badge.active{background:#e6f7ed;color:#0f8a4a}
         .badge.inactive{background:#f7e6e6;color:#b34747}
-        .btn{border:none;border-radius:8px;padding:6px 10px;font-size:12px;color:#fff}
+        .btn{border:none;border-radius:8px;padding:6px 10px;font-size:12px;color:#fff;display:inline-block;text-decoration:none}
         .btn.edit{background:#64748b}
         .btn.delete{background:#ef4444}
         .btn.detail{background:#b34555}
+        .panel{background:#fff;border:1px solid #d9c7bf;border-radius:10px;padding:14px;margin:12px 0}
+        .panel h3{margin:0 0 10px 0;font-weight:800}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .form-row .field{display:flex;flex-direction:column;gap:6px}
+        .form-row input, .form-row select{border:1px solid #d9c7bf;border-radius:10px;padding:10px 12px}
+        .actions{display:flex;gap:8px;align-items:center;margin-top:10px}
     </style>
 </form>
+
+@php
+    $qs = http_build_query(array_filter(['q' => $q ?? null, 'division' => $division ?? null, 'active' => $active ?? null]));
+@endphp
+
+@if(!empty($showId) && !empty($selected))
+    <div class="panel">
+        <h3>Detail Pegawai</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div><strong>Nama</strong><br>{{ $selected->user->name ?? '—' }}</div>
+            <div><strong>Email</strong><br>{{ $selected->user->email ?? '—' }}</div>
+            <div><strong>Divisi</strong><br>{{ $selected->division ?? '—' }}</div>
+            <div><strong>Jabatan</strong><br>{{ $selected->position ?? '—' }}</div>
+            <div><strong>Status</strong><br>{{ $selected->active ? 'Aktif' : 'Nonaktif' }}</div>
+        </div>
+        <div class="actions">
+            <a class="btn edit" href="{{ route('admin.kelola-pegawai', array_filter(['q'=>$q,'division'=>$division,'active'=>$active,'edit'=>$selected->id])) }}">Edit</a>
+            <a class="btn detail" href="{{ route('admin.kelola-pegawai', array_filter(['q'=>$q,'division'=>$division,'active'=>$active])) }}">Tutup</a>
+        </div>
+    </div>
+@endif
+
+@if(!empty($editId) && !empty($selected))
+    <div class="panel">
+        <h3>Edit Pegawai</h3>
+        <form method="POST" action="{{ route('admin.employees.update', $selected) }}@if($qs)?{{ '?'.$qs }}@endif">
+            @csrf
+            @method('PATCH')
+            <div class="form-row">
+                <div class="field">
+                    <label>Nama</label>
+                    <input type="text" name="name" value="{{ old('name', optional($selected->user)->name) }}">
+                </div>
+                <div class="field">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ old('email', optional($selected->user)->email) }}">
+                </div>
+                <div class="field">
+                    <label>Divisi</label>
+                    <input type="text" name="division" value="{{ old('division', $selected->division) }}">
+                </div>
+                <div class="field">
+                    <label>Jabatan</label>
+                    <input type="text" name="position" value="{{ old('position', $selected->position) }}">
+                </div>
+                <div class="field">
+                    <label>Status</label>
+                    <select name="active">
+                        <option value="1" @selected(old('active', (int)$selected->active)===1)>Aktif</option>
+                        <option value="0" @selected(old('active', (int)$selected->active)===0)>Nonaktif</option>
+                    </select>
+                </div>
+            </div>
+            <div class="actions">
+                <button type="submit" class="btn edit">Simpan</button>
+                <a class="btn detail" href="{{ route('admin.kelola-pegawai', array_filter(['q'=>$q,'division'=>$division,'active'=>$active])) }}">Batal</a>
+            </div>
+        </form>
+    </div>
+@endif
 
 <!-- Table -->
 <div class="table-shell">
@@ -85,10 +135,14 @@
                     <td>
                         <span class="badge {{ $e->active ? 'active' : 'inactive' }}">{{ $e->active ? 'Aktif' : 'Nonaktif' }}</span>
                     </td>
-                    <td style="display:flex;gap:6px;flex-wrap:wrap;">
-                        <button class="btn detail" type="button">Detail</button>
-                        <button class="btn edit" type="button">Edit</button>
-                        <button class="btn delete" type="button">Hapus</button>
+                    <td style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                        <a class="btn detail" href="{{ route('admin.kelola-pegawai', array_filter(['q'=>$q,'division'=>$division,'active'=>$active,'show'=>$e->id])) }}">Detail</a>
+                        <a class="btn edit" href="{{ route('admin.kelola-pegawai', array_filter(['q'=>$q,'division'=>$division,'active'=>$active,'edit'=>$e->id])) }}">Edit</a>
+                        <form method="POST" action="{{ route('admin.employees.destroy', $e) }}@if($qs)?{{ '?'.$qs }}@endif" onsubmit="return confirm('Hapus pegawai ini?');">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn delete" type="submit">Hapus</button>
+                        </form>
                     </td>
                 </tr>
             @empty

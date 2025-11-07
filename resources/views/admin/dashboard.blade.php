@@ -114,16 +114,17 @@
       maintainAspectRatio: false,
       cutout: '65%',
       plugins: {
-        legend: { display: true, position: 'bottom', labels: { usePointStyle: true } },
+        legend: { display: true, position: 'bottom', padding: 24, labels: { usePointStyle: true, padding: 50 } },
         datalabels: {
           formatter: (value) => (value > 0 ? value : ''),
           color: '#111827',
           anchor: 'end',
           align: 'end',
-          offset: 8,
+          offset: 14,
           font: { weight: '700' }
         }
-      }
+      },
+      layout: { padding: { bottom: 10 } }
     },
     plugins: [ChartDataLabels]
   }) : null;
@@ -135,28 +136,29 @@
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: true, position: 'bottom', labels: { usePointStyle: true } },
+        legend: { display: true, position: 'bottom', padding: 24, labels: { usePointStyle: true, padding: 50 } },
         datalabels: {
           formatter: (value) => (value > 0 ? value : ''),
           color: '#111827',
           anchor: 'end',
           align: 'end',
-          offset: 8,
+          offset: 16,
           font: { weight: '700' }
         }
-      }
+      },
+      layout: { padding: { bottom: 20 } }
     },
     plugins: [ChartDataLabels]
   }) : null;
 
   async function loadAdminMetrics() {
     try {
-      const res = await fetch('/api/dashboard/metrics', { headers: { 'Accept': 'application/json' } });
+      const res = await fetch('/admin/api/dashboard/metrics', { headers: { 'Accept': 'application/json' } });
       if (!res.ok) return;
       const data = await res.json();
 
       const series = data.series || { hadir: [], kantor: [], luar_kantor: [] };
-      const current = data.current_month || { present_days: 0, kantor_days: 0, luar_kantor_days: 0, late_count: 0 };
+      const today = data.today || { total_employees: 0, present: 0, absent: 0, kantor: 0, luar_kantor: 0, overtime_approved: 0 };
 
       // Bar chart: gunakan Hadir, plus placeholder untuk TidakHadir/Lembur bila belum ada data backend
       if (barChart) {
@@ -171,28 +173,30 @@
         barChart.update();
       }
 
-      // Donut: lokasi kerja bulan ini
+      // Donut: lokasi kerja (hari ini)
       if (donutChart) {
-        donutChart.data.datasets[0].data = [current.kantor_days || 0, current.luar_kantor_days || 0];
+        donutChart.data.datasets[0].data = [today.kantor || 0, today.luar_kantor || 0];
         donutChart.update();
       }
 
-      // Pie: rasio hadir vs tidak hadir; absent sementara dihitung sederhana jika tersedia total kerja
+      // Pie: rasio hadir vs tidak hadir (hari ini)
       if (pieChart) {
-        const present = current.present_days || 0;
-        // Jika Anda punya total hari kerja, gantikan 0 berikut. Sementara, gunakan 0 untuk menghindari mislead.
-        const absent = 0;
+        const present = today.present || 0;
+        const absent = today.absent || 0;
         pieChart.data.datasets[0].data = [present, absent];
         pieChart.update();
       }
 
-      // Isi sebagian stat cards jika ingin
+      // Isi semua stat cards
       try {
         const setText = (sel, v) => { const el = document.querySelector(sel); if (el) el.textContent = v; };
-        // urutan kartu: Total Pegawai (biarkan statis), Hadir, Tidak Hadir (sementara '-'), Kantor, Luar Kantor, Lembur (statis)
-        setText('.stats-row .stat-card:nth-child(2) .value', current.present_days || 0);
-        setText('.stats-row .stat-card:nth-child(4) .value', current.kantor_days || 0);
-        setText('.stats-row .stat-card:nth-child(5) .value', current.luar_kantor_days || 0);
+        // urutan kartu: 1 Total Pegawai, 2 Pegawai Hadir, 3 Pegawai Tidak Hadir, 4 Pegawai di Kantor, 5 Pegawai di Luar Kantor, 6 Lembur Disetujui
+        setText('.stats-row .stat-card:nth-child(1) .value', today.total_employees || 0);
+        setText('.stats-row .stat-card:nth-child(2) .value', today.present || 0);
+        setText('.stats-row .stat-card:nth-child(3) .value', today.absent || 0);
+        setText('.stats-row .stat-card:nth-child(4) .value', today.kantor || 0);
+        setText('.stats-row .stat-card:nth-child(5) .value', today.luar_kantor || 0);
+        setText('.stats-row .stat-card:nth-child(6) .value', today.overtime_approved || 0);
       } catch (_) {}
     } catch (_) {}
   }

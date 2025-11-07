@@ -17,6 +17,7 @@ use App\Http\Controllers\UserRecapController;
 use App\Http\Controllers\Admin\EmployeeRegistrationController;
 use App\Http\Controllers\ReverseGeocodeController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Admin\AdminDashboardController;
 
 Route::get('/', function () {
     return view('login');
@@ -93,6 +94,11 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::post('/kelola-presensi/{attendance}/reject', [AttendanceController::class, 'reject'])->name('admin.attendance.reject');
 
     Route::get('/kelola-pegawai', [EmployeeController::class, 'index'])->name('admin.kelola-pegawai');
+    Route::patch('/kelola-pegawai/{employee}', [EmployeeController::class, 'update'])->name('admin.employees.update');
+    Route::delete('/kelola-pegawai/{employee}', [EmployeeController::class, 'destroy'])->name('admin.employees.destroy');
+
+    // Admin dashboard metrics API
+    Route::get('/api/dashboard/metrics', [AdminDashboardController::class, 'metrics'])->name('admin.dashboard.metrics');
 
     Route::get('/rekap-pegawai', [RecapController::class, 'index'])->name('admin.rekap-pegawai');
     Route::get('/rekap-pegawai/export-csv', [RecapController::class, 'exportCsv'])->name('admin.rekap-pegawai.export.csv');

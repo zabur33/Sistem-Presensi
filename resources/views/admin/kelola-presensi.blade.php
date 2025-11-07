@@ -29,21 +29,10 @@
         <div class="title">Tanpa Keterangan</div>
         <div class="footer">{{ $summary['tanpa_ket'] ?? 0 }}</div>
     </div>
-    <div class="summary-card">
-        <div class="icon">
-            <!-- clipboard -->
-            <svg viewBox="0 0 24 24" fill="none" stroke="#6c6c6c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-            </svg>
-        </div>
-        <div class="title">Izin</div>
-        <div class="footer" style="background: #4a90e2;">{{ $summary['izin'] ?? 0 }}</div>
-    </div>
     <!-- Hanya dua kartu: Hadir & Tanpa Keterangan -->
 
     <style>
-        .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:20px}
+        .summary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-bottom:20px}
         .summary-card{background:#f4e9e4;border:1px solid #e3d6cf;border-radius:16px;padding:18px 18px 0 18px;display:flex;flex-direction:column;align-items:center;box-shadow:0 1px 0 rgba(0,0,0,.02)}
         .summary-card .icon{width:48px;height:48px;display:flex;align-items:center;justify-content:center;margin:8px 0}
         .summary-card .icon svg{width:40px;height:40px}
@@ -85,7 +74,6 @@
         <select class="form-input" name="status">
             <option value="">Semua</option>
             <option value="Hadir" @selected(($statusFilter ?? '')==='Hadir')>Hadir</option>
-            <option value="Izin" @selected(($statusFilter ?? '')==='Izin')>Izin</option>
             <option value="Tanpa Keterangan" @selected(($statusFilter ?? '')==='Tanpa Keterangan')>Tanpa Keterangan</option>
         </select>
     </div>

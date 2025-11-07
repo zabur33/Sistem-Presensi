@@ -36,8 +36,11 @@
                     </div>
                 </div>
                 <a href="/admin/profile" aria-label="Kelola Profile" title="Kelola Profile" 
-                   style="display:grid; place-items:center; width:40px; height:40px; border-radius:50%; border:2px solid #ffffff; background:transparent; color:#ffffff; padding:0; margin:0; text-decoration:none;">
-                    <span style="display:block; font-size:20px; line-height:1; transform:translateY(1px);">👤</span>
+                   style="display:inline-flex; align-items:center; justify-content:center; background:transparent; color:#ffffff; padding:0; margin:0; text-decoration:none;">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:24px;height:24px">
+                        <circle cx="12" cy="8" r="4"/>
+                        <path d="M5.5 21a7.5 7.5 0 0 1 13 0"/>
+                    </svg>
                 </a>
             </div>
         </div>
