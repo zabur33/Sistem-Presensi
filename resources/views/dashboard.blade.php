@@ -8,10 +8,10 @@
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/css/dashboard.css', 'resources/js/app.js'])
     @endif
-    
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <style>
         /* Additional styles for new dashboard content */
         .dashboard-content {
@@ -372,16 +372,12 @@
                         </div>
                         <div class="chart-legend">
                             <div class="legend-item">
-                                <div class="legend-color" style="background: #f59e0b;"></div>
-                                <span>Dinas</span>
-                            </div>
-                            <div class="legend-item">
                                 <div class="legend-color" style="background: #10b981;"></div>
-                                <span>Hadir</span>
+                                <span>Kantor</span>
                             </div>
                             <div class="legend-item">
                                 <div class="legend-color" style="background: #3b82f6;"></div>
-                                <span>WFH</span>
+                                <span>Luar Kantor</span>
                             </div>
                         </div>
                     </div>
@@ -410,69 +406,6 @@
                                 </div>
                             </div>
                             <button class="checkout-btn">Check Out</button>
-                        </div>
-                    </div>
-
-                    <!-- Kalender -->
-                    <div class="card">
-                        <h2>Kalender</h2>
-                        <div class="calendar">
-                            <div class="calendar-header">
-                                <h3>November 2025</h3>
-                                <div class="calendar-nav">
-                                    <button><i class="fas fa-chevron-left"></i></button>
-                                    <button><i class="fas fa-chevron-right"></i></button>
-                                </div>
-                            </div>
-                            <div class="calendar-grid">
-                                <div class="calendar-day header">Su</div>
-                                <div class="calendar-day header">Mo</div>
-                                <div class="calendar-day header">Tu</div>
-                                <div class="calendar-day header">We</div>
-                                <div class="calendar-day header">Th</div>
-                                <div class="calendar-day header">Fr</div>
-                                <div class="calendar-day header">Sa</div>
-                                
-                                <!-- Empty cells for alignment -->
-                                <div class="calendar-day empty">-</div>
-                                <div class="calendar-day empty">-</div>
-                                <div class="calendar-day empty">-</div>
-                                <div class="calendar-day empty">-</div>
-                                <div class="calendar-day empty">-</div>
-                                <div class="calendar-day empty">-</div>
-                                
-                                <!-- Days of November 2025 -->
-                                <div class="calendar-day date">1</div>
-                                <div class="calendar-day date">2</div>
-                                <div class="calendar-day date today">3</div>
-                                <div class="calendar-day date">4</div>
-                                <div class="calendar-day date">5</div>
-                                <div class="calendar-day date">6</div>
-                                <div class="calendar-day date">7</div>
-                                <div class="calendar-day date">8</div>
-                                <div class="calendar-day date">9</div>
-                                <div class="calendar-day date">10</div>
-                                <div class="calendar-day date">11</div>
-                                <div class="calendar-day date">12</div>
-                                <div class="calendar-day date">13</div>
-                                <div class="calendar-day date">14</div>
-                                <div class="calendar-day date">15</div>
-                                <div class="calendar-day date">16</div>
-                                <div class="calendar-day date">17</div>
-                                <div class="calendar-day date">18</div>
-                                <div class="calendar-day date">19</div>
-                                <div class="calendar-day date">20</div>
-                                <div class="calendar-day date">21</div>
-                                <div class="calendar-day date">22</div>
-                                <div class="calendar-day date">23</div>
-                                <div class="calendar-day date">24</div>
-                                <div class="calendar-day date">25</div>
-                                <div class="calendar-day date">26</div>
-                                <div class="calendar-day date">27</div>
-                                <div class="calendar-day date">28</div>
-                                <div class="calendar-day date">29</div>
-                                <div class="calendar-day date">30</div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -522,13 +455,12 @@
         const workModeChart = new Chart(workModeCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Hadir', 'WFH', 'Dinas Luar'],
+                labels: ['Kantor', 'Luar Kantor'],
                 datasets: [{
-                    data: [0, 0, 0],
+                    data: [0, 0],
                     backgroundColor: [
                         '#10b981',
-                        '#3b82f6',
-                        '#f59e0b'
+                        '#3b82f6'
                     ],
                     borderWidth: 0
                 }]
@@ -556,42 +488,98 @@
                     const { ctx, data } = chart;
                     const centerX = chart.getDatasetMeta(0).data[0].x;
                     const centerY = chart.getDatasetMeta(0).data[0].y;
-                    
+
                     ctx.save();
                     ctx.font = 'bold 14px Arial';
                     ctx.fillStyle = '#333';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    
+
                     // Draw labels for each segment
                     data.datasets[0].data.forEach((value, index) => {
                         const meta = chart.getDatasetMeta(0).data[index];
                         const angle = (meta.startAngle + meta.endAngle) / 2;
                         const radius = (meta.innerRadius + meta.outerRadius) / 2;
-                        
+
                         const x = centerX + Math.cos(angle) * radius;
                         const y = centerY + Math.sin(angle) * radius;
-                        
+
                         ctx.fillStyle = 'white';
                         ctx.fillText(value, x, y);
                     });
-                    
+
                     ctx.restore();
                 }
             }]
         });
 
+        // Fetch metrics from backend and populate UI
+        async function loadDashboardMetrics() {
+            try {
+                const res = await fetch('/api/dashboard/metrics', { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) throw new Error('HTTP '+res.status);
+                const data = await res.json();
+
+                // Update stats cards
+                const presentDays = data.current_month?.present_days ?? 0;
+                const kantorDays = data.current_month?.kantor_days ?? 0;
+                const luarDays = data.current_month?.luar_kantor_days ?? 0;
+                const lateCount = data.current_month?.late_count ?? 0;
+                const totalWorkdaysEl = document.getElementById('totalWorkdaysVal');
+                const presentEl = document.getElementById('presentVal');
+                const remoteEl = document.getElementById('remoteVal');
+                const lateEl = document.getElementById('lateVal');
+                if (presentEl) presentEl.textContent = presentDays;
+                if (remoteEl) remoteEl.textContent = luarDays;
+                if (lateEl) lateEl.textContent = lateCount;
+
+                // Update attendance bar chart (per month)
+                const labels = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+                const kantorSeries = data.series?.kantor ?? new Array(12).fill(0);
+                const luarSeries = data.series?.luar_kantor ?? new Array(12).fill(0);
+                attendanceChart.data.labels = labels;
+                attendanceChart.data.datasets = [
+                    { label: 'Kantor', data: kantorSeries, backgroundColor: '#10b981' },
+                    { label: 'Luar Kantor', data: luarSeries, backgroundColor: '#3b82f6' }
+                ];
+                attendanceChart.update();
+
+                // Update donut chart as percentage distribution current month
+                const total = Math.max(1, (kantorDays + luarDays));
+                const donut = [
+                    Math.round((kantorDays/total)*100),
+                    Math.round((luarDays/total)*100)
+                ];
+                workModeChart.data.datasets[0].data = donut;
+                workModeChart.update();
+
+                // Update today section
+                const today = data.today;
+                const locEl = document.getElementById('todayLocation');
+                const timesEl = document.getElementById('todayTimes');
+                if (today) {
+                    if (locEl) locEl.textContent = today.location_text || (today.location_type === 'luar_kantor' ? 'Luar Kantor' : 'Kantor');
+                    if (timesEl) timesEl.textContent = `Check-in: ${today.time_in || '—'} | Check-out: ${today.time_out || '—'}`;
+                }
+            } catch (e) {
+                // silent fail on dashboard
+                console.warn('Failed to load dashboard metrics', e);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDashboardMetrics);
+
         // Dropdown functionality
         function togglePresensiDropdown(event) {
             event.preventDefault();
             event.stopPropagation();
-            
+
             const submenu = document.getElementById('presensi-submenu');
             const arrow = document.querySelector('.presensi-menu .dropdown-arrow');
-            
+
             if (submenu && arrow) {
                 const isVisible = submenu.classList.contains('show');
-                
+
                 if (isVisible) {
                     submenu.classList.remove('show');
                     arrow.classList.remove('rotated');
@@ -621,7 +609,7 @@
         window.addEventListener('DOMContentLoaded', function() {
             const submenu = document.getElementById('presensi-submenu');
             const arrow = document.querySelector('.presensi-menu .dropdown-arrow');
-            
+
             if (submenu && arrow) {
                 const isCollapsed = localStorage.getItem('presensi-dropdown-collapsed') === 'true';
                 if (!isCollapsed) {
@@ -666,4 +654,4 @@
         });
     </script>
 </body>
-</html> 
+</html>

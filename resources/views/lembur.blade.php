@@ -21,6 +21,7 @@
         .retake-btn{ margin-top:10px; }
         /* Pastikan svg tidak membesar di luar container */
         .camera-section svg{ max-width:100%; max-height:100%; }
+        .required-asterisk{ color:#e11d48; }
     </style>
 </head>
 <body>
@@ -131,12 +132,12 @@
                                 <!-- Area Mulai Kamera -->
                                 <div class="camera-area" id="cameraArea-face">
                                     <div class="camera-icon">
-                                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1 2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                                     </div>
                                     <p class="camera-text">Ambil foto wajah langsung dari kamera</p>
                                 </div>
                                 <button class="camera-btn" id="cameraBtn-face" onclick="startCamera('face')" type="button">
-                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1 2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                                     Ambil Foto
                                 </button>
                             </div>
@@ -173,12 +174,12 @@
                                 <!-- Area Mulai Kamera -->
                                 <div class="camera-area" id="cameraArea-support">
                                     <div class="camera-icon">
-                                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1 2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                                     </div>
                                     <p class="camera-text">Ambil foto pendukung langsung dari kamera</p>
                                 </div>
                                 <button class="camera-btn" id="cameraBtn-support" onclick="startCamera('support')" type="button">
-                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1 2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                                     Ambil Foto
                                 </button>
                             </div>
@@ -196,8 +197,8 @@
 
                     <!-- Deskripsi Kegiatan -->
                     <div class="form-group">
-                        <label for="deskripsi">Deskripsi Kegiatan</label>
-                        <textarea id="deskripsi" name="deskripsi" placeholder="Masukkan deskripsi kegiatan lembur yang akan dilakukan..."></textarea>
+                        <label for="deskripsi">Deskripsi Kegiatan <span class="required-asterisk" aria-hidden="true">*</span></label>
+                        <textarea id="deskripsi" name="deskripsi" placeholder="Masukkan deskripsi kegiatan lembur yang akan dilakukan..." required aria-required="true"></textarea>
                     </div>
 
                     <!-- Action Buttons -->

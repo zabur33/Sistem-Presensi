@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\EmployeeRegistrationController;
 use App\Http\Controllers\ReverseGeocodeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\ProfileController;
 
 Route::get('/', function () {
     return view('login');
@@ -67,6 +68,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/edit-profile', function () {
         return view('edit-profile');
     })->name('edit.profile');
+
+    // Profile update (avatar + fields)
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
 
     // Reports
     Route::get('/reports/attendance', [ReportController::class, 'attendance'])->name('reports.attendance');

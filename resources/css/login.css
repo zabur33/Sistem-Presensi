@@ -1,15 +1,16 @@
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Inter', Arial, sans-serif;
+    font-family: "Inter", Arial, sans-serif;
     background: #fff;
 }
 .container {
     display: flex;
     height: 100vh;
+    width: 100%;
 }
 .left {
-    flex: 1.2;
+    flex: 4; /* 4 bagian untuk gambar */
     position: relative;
     display: flex;
     align-items: center;
@@ -23,26 +24,34 @@ body {
     object-position: center;
 }
 .left::before {
-    content: '';
+    content: "";
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.3);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
     z-index: 1;
 }
 .right {
-    flex: 1;
+    flex: 1; /* 1 bagian untuk form */
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch; /* biar konten memenuhi lebar kolom */
     justify-content: center;
     background: #fff;
+    padding: 0; /* hilangkan ruang kosong sisi kanan */
 }
 .login-box {
     width: 100%;
-    max-width: 420px;
-    padding: 40px 30px;
+    max-width: 100%;
+    padding: 48px 36px;
+    height: 100%; /* penuhi tinggi kolom kanan */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* konten tetap rapi di tengah kartu tinggi */
     box-sizing: border-box;
-    box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
     border-radius: 18px;
     background: #fff;
 }
@@ -77,7 +86,8 @@ body {
     border-radius: 8px;
     margin-bottom: 18px;
     padding: 0 12px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    border: 1px solid transparent;
 }
 .input-group svg {
     width: 22px;
@@ -93,6 +103,30 @@ body {
     padding: 14px 12px;
     flex: 1;
     font-size: 1rem;
+}
+.input-group:focus-within {
+    background: #ffffff;
+    border-color: #fd8d5c;
+    box-shadow: 0 0 0 3px rgba(253, 141, 92, 0.25);
+}
+.toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    margin-left: 6px;
+    color: #666;
+}
+.toggle-btn:hover {
+    color: #333;
+}
+.toggle-btn:focus {
+    outline: 2px solid #fd8d5c;
+    outline-offset: 2px;
+    border-radius: 6px;
 }
 .login-btn {
     width: 100%;
@@ -111,14 +145,36 @@ body {
     background: #e76f51;
     color: #fff;
 }
+/* Error text helper */
+.error {
+    font-size: 0.9rem;
+}
 @media (max-width: 900px) {
-    .container { flex-direction: column; }
-    .left, .right { flex: unset; height: 50vh; }
+    .container {
+        flex-direction: column;
+    }
+    .left,
+    .right {
+        flex: unset;
+        height: 50vh;
+    }
+    .login-box { height: auto; }
 }
 @media (max-width: 600px) {
-    .container { flex-direction: column; }
-    .left { display: none; }
-    .right { height: 100vh; }
+    .container {
+        flex-direction: column;
+    }
+    .left {
+        display: none;
+    }
+    .right {
+        height: 100vh;
+        padding: 24px;
+    }
 }
-
-
+@media (min-width: 1280px) {
+    /* Very wide screens: pertahankan rasio 4:1 */
+    .left { flex: 4; }
+    .right { flex: 1; }
+    .login-box { max-width: 100%; }
+}

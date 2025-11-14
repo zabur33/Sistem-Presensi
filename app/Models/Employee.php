@@ -11,7 +11,7 @@ class Employee extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'nip', 'position', 'division', 'phone', 'avatar_url', 'active',
+        'user_id', 'nip', 'position', 'division', 'phone', 'avatar_url', 'gender', 'birth_date', 'address', 'active',
     ];
 
     protected $casts = [

@@ -77,7 +77,8 @@
                         <h2>User Information</h2>
                     </div>
 
-                    <form id="editProfileForm" class="profile-form">
+                    <form id="editProfileForm" class="profile-form" action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
                         <div class="form-group">
                             <label for="name">Name*</label>
                             <input type="text" id="name" name="name" value="Ilham Wahyudi" required>
@@ -86,6 +87,18 @@
                         <div class="form-group">
                             <label for="email">Email Address*</label>
                             <input type="email" id="email" name="email" value="ilham.wahyudi@lifemedia.com" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Jenis Kelamin</label>
+                            <div style="display:flex; gap:16px; align-items:center;">
+                                <label style="display:flex; align-items:center; gap:6px;">
+                                    <input type="radio" name="gender" value="L" {{ (optional(auth()->user()->employee)->gender ?? '')==='L' ? 'checked' : '' }}> Laki-laki
+                                </label>
+                                <label style="display:flex; align-items:center; gap:6px;">
+                                    <input type="radio" name="gender" value="P" {{ (optional(auth()->user()->employee)->gender ?? '')==='P' ? 'checked' : '' }}> Perempuan
+                                </label>
+                            </div>
                         </div>
 
                         <div class="form-group">
@@ -108,12 +121,8 @@
                             <input type="text" id="position" name="position" value="Staff IT" placeholder="Enter position">
                         </div>
 
-                        <div class="forgot-password">
-                            <a href="#" onclick="showForgotPasswordModal()">Forgot Password?</a>
-                        </div>
-
                         <div class="form-actions">
-                            <button type="button" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+                            <a href="/profile" id="btnCancel" class="btn-cancel" role="button">Cancel</a>
                             <button type="submit" class="btn-save">Save</button>
                         </div>
                     </form>
@@ -123,18 +132,18 @@
                 <div class="profile-picture-section">
                     <div class="profile-picture-container">
                         <div class="profile-picture editable">
-                            <img src="{{ asset('images/profile-placeholder.jpg') }}" alt="Profile Picture" id="profileImage">
-                            <div class="upload-overlay">
+                            <img src="{{ optional(auth()->user()->employee)->avatar_url ? asset('storage/'.optional(auth()->user()->employee)->avatar_url) : asset('images/profile-placeholder.jpg') }}" alt="Profile Picture" id="profileImage">
+                            <label class="upload-overlay" for="profileImageInput">
                                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path d="M12 5v14M5 12h14"/>
                                 </svg>
                                 <span>Change Photo</span>
-                            </div>
-                            <input type="file" id="profileImageInput" accept="image/*" style="display: none;">
+                            </label>
+                            <input type="file" id="profileImageInput" name="avatar" accept="image/*" style="display: none;" form="editProfileForm">
                         </div>
                         <div class="profile-info">
                             <h3 id="profileName">Ilham Wahyudi</h3>
-                            <p id="profileRole">Staff IT</p>
+                            <div id="profileRole" class="role">Staff IT</div>
                         </div>
                     </div>
                 </div>
@@ -337,6 +346,14 @@ function closeConfirmCancelModal() {
 }
 
 function confirmCancel() {
+    // Close modal first
+    const modal = document.getElementById('confirmCancelModal');
+    if (modal) modal.style.display = 'none';
+    // Remove beforeunload guard so navigation isn't blocked
+    if (typeof beforeUnloadHandler === 'function') {
+        window.removeEventListener('beforeunload', beforeUnloadHandler);
+    }
+    // Navigate back to profile
     window.location.href = '/profile';
 }
 
@@ -452,18 +469,35 @@ window.addEventListener('click', function(event) {
 });
 
 // Form submission
-document.getElementById('editProfileForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    saveProfile();
-});
+// Allow normal form submission to backend for avatar upload
+
+// Ensure Cancel button click is captured even if form intercepts events
+const btnCancel = document.getElementById('btnCancel');
+if (btnCancel) {
+    btnCancel.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof beforeUnloadHandler === 'function') {
+            window.removeEventListener('beforeunload', beforeUnloadHandler);
+        }
+        // If there are changes, show our confirm modal; otherwise navigate
+        if (hasChanges()) {
+            document.getElementById('confirmCancelModal').style.display = 'flex';
+        } else {
+            window.location.href = '/profile';
+        }
+    });
+}
 
 // Warn user before leaving page if there are unsaved changes
-window.addEventListener('beforeunload', function(e) {
+function beforeUnloadHandler(e){
     if (hasChanges()) {
         e.preventDefault();
         e.returnValue = '';
+        return '';
     }
-});
+}
+window.addEventListener('beforeunload', beforeUnloadHandler);
 </script>
 </body>
 </html>

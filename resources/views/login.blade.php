@@ -26,15 +26,15 @@
             <div class="desc"> Jika belum memiliki akun, hubungi admin!</div>
             <div class="input-group">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M22 6l-10 7L2 6"/></svg>
-                <input type="email" name="email" placeholder="Enter email" value="{{ old('email') }}" required>
+                <input type="email" name="email" placeholder="Enter email" value="{{ old('email') }}" required autocomplete="username" inputmode="email">
             </div>
             <div class="input-group">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="transform: rotate(0deg);">
                     <rect x="3" y="11" width="18" height="11" rx="2" />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
-                <input id="password" type="password" name="password" placeholder="Enter password" required>
-                <button type="button" id="togglePassword" aria-label="Tampilkan/Sembunyikan password" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:6px;margin-left:6px;">
+                <input id="password" type="password" name="password" placeholder="Enter password" required autocomplete="current-password">
+                <button type="button" id="togglePassword" class="toggle-btn" aria-label="Tampilkan/Sembunyikan password">
                     <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                         <circle cx="12" cy="12" r="3"/>

@@ -11,6 +11,9 @@
     @endif
     <link rel="stylesheet" href="{{ asset('css/presensi.css') }}">
     <link rel="stylesheet" href="{{ asset('css/presensi-luar.css') }}">
+    <style>
+        .required-asterisk{ color:#e11d48; }
+    </style>
 </head>
 <body>
 <div class="main-container">
@@ -142,7 +145,7 @@
 
             <!-- Camera Capture Section -->
             <div class="camera-section">
-                <h2>Ambil Foto Presensi</h2>
+                <h2>Ambil Foto Presensi <span class="required-asterisk" aria-hidden="true">*</span></h2>
                 <div class="camera-card">
                     <!-- Camera Preview -->
                     <div class="camera-preview" id="cameraPreview" style="display: none;">
@@ -244,7 +247,7 @@
 
             <!-- Activity Description Section -->
             <div class="activity-section">
-                <h2>Tambahkan Keterangan</h2>
+                <h2>Tambahkan Keterangan <span class="required-asterisk" aria-hidden="true">*</span></h2>
                 <div class="activity-card">
                     <div class="activity-input">
                         <textarea id="activityInput" placeholder="Jelaskan kegiatan yang akan/sedang dilakukan..."></textarea>
@@ -561,12 +564,19 @@ function resetPresensiStateAndUI() {
 }
 
 function handlePresensi(type) {
-    // Check if photo has been taken
-    if (!uploadedPhoto && type !== 'kepulangan') {
+    // Require description and photo before any presensi action
+    const actEl = document.getElementById('activityInput');
+    const actVal = actEl ? actEl.value.trim() : '';
+    if (!actVal) {
+        alert('Mohon isi keterangan kegiatan terlebih dahulu.');
+        if (actEl) actEl.focus();
+        return;
+    }
+    activityDescription = actVal;
+    if (!uploadedPhoto) {
         alert('Anda harus mengambil foto terlebih dahulu sebelum melakukan presensi!');
         return;
     }
-
     const currentTime = getCurrentTime();
     const button = document.getElementById(`btn-${type}`);
     const statusBadge = document.getElementById(`${type}-status`);

@@ -244,6 +244,13 @@
     margin: 0;
 }
 
+/* Ensure role appears beneath the name */
+.profile-info h3 + .role,
+.profile-info .role {
+    display: block !important;
+    margin-top: 4px;
+}
+
 /* Header Icons Link */
 .header-icons a {
     color: inherit;

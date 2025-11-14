@@ -80,12 +80,12 @@
                     <form id="profileForm" class="profile-form">
                         <div class="form-group">
                             <label for="name">Name*</label>
-                            <input type="text" id="name" name="name" value="Ilham Wahyudi" readonly>
+                            <input type="text" id="name" name="name" value="{{ auth()->user()->name ?? '' }}" readonly>
                         </div>
 
                         <div class="form-group">
                             <label for="email">Email Address*</label>
-                            <input type="email" id="email" name="email" value="ilham.wahyudi@lifemedia.com" readonly>
+                            <input type="email" id="email" name="email" value="{{ auth()->user()->email ?? '' }}" readonly>
                         </div>
 
                         <div class="form-group">
@@ -93,8 +93,45 @@
                             <input type="password" id="password" name="password" placeholder="••••••••" readonly>
                         </div>
 
-                        <div class="forgot-password">
-                            <a href="#" onclick="showForgotPasswordModal()">Forgot Password?</a>
+                        
+
+                        <div class="form-group">
+                            <label for="nip">Nomor Induk Pegawai</label>
+                            <input type="text" id="nip" name="nip" value="{{ optional(auth()->user()->employee)->nip ?? '' }}" placeholder="NIP" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="gender">Jenis Kelamin</label>
+                            <select id="gender" name="gender" disabled>
+                                <option value="">Pilih</option>
+                                <option value="L" {{ (optional(auth()->user()->employee)->gender ?? '')==='L' ? 'selected' : '' }}>Laki-laki</option>
+                                <option value="P" {{ (optional(auth()->user()->employee)->gender ?? '')==='P' ? 'selected' : '' }}>Perempuan</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="birth_date">Tanggal Lahir</label>
+                            <input type="date" id="birth_date" name="birth_date" value="{{ optional(auth()->user()->employee)->birth_date ?? '' }}" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="address">Alamat</label>
+                            <input type="text" id="address" name="address" value="{{ optional(auth()->user()->employee)->address ?? '' }}" placeholder="Alamat lengkap" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="position">Jabatan</label>
+                            <input type="text" id="position" name="position" value="{{ optional(auth()->user()->employee)->position ?? '' }}" placeholder="Contoh: Staff IT" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">No. Telepon</label>
+                            <input type="text" id="phone" name="phone" value="{{ optional(auth()->user()->employee)->phone ?? '' }}" placeholder="08xxxxxxxxxx" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="division">Divisi</label>
+                            <input type="text" id="division" name="division" value="{{ optional(auth()->user()->employee)->division ?? '' }}" placeholder="Contoh: Teknologi Informasi" readonly>
                         </div>
 
                         <div class="form-actions">
@@ -107,7 +144,7 @@
                 <div class="profile-picture-section">
                     <div class="profile-picture-container">
                         <div class="profile-picture">
-                            <img src="{{ asset('images/profile-placeholder.jpg') }}" alt="Profile Picture" id="profileImage">
+                            <img src="{{ optional(auth()->user()->employee)->avatar_url ? asset('storage/'.optional(auth()->user()->employee)->avatar_url) : asset('images/profile-placeholder.jpg') }}" alt="Profile Picture" id="profileImage">
                             <div class="upload-overlay" id="uploadOverlay" style="display: none;">
                                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path d="M12 5v14M5 12h14"/>
@@ -117,33 +154,12 @@
                             <input type="file" id="profileImageInput" accept="image/*" style="display: none;">
                         </div>
                         <div class="profile-info">
-                            <h3 id="profileName">Ilham Wahyudi</h3>
-                            <p id="profileRole">Staff IT</p>
+                            <h3 id="profileName">{{ auth()->user()->name ?? '' }}</h3>
+                            <div id="profileRole" class="role">{{ optional(auth()->user()->employee)->position ?? '' }}</div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Forgot Password Modal -->
-<div id="forgotPasswordModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Reset Password</h3>
-            <span class="close" onclick="closeForgotPasswordModal()">&times;</span>
-        </div>
-        <div class="modal-body">
-            <p>Enter your email address and we'll send you a link to reset your password.</p>
-            <div class="form-group">
-                <label for="resetEmail">Email Address</label>
-                <input type="email" id="resetEmail" placeholder="Enter your email">
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-secondary" onclick="closeForgotPasswordModal()">Cancel</button>
-            <button class="btn-primary" onclick="sendResetLink()">Send Reset Link</button>
         </div>
     </div>
 </div>
@@ -311,27 +327,7 @@ document.querySelector('.profile-picture').addEventListener('click', function() 
     }
 });
 
-// Forgot password modal
-function showForgotPasswordModal() {
-    document.getElementById('forgotPasswordModal').style.display = 'flex';
-}
-
-function closeForgotPasswordModal() {
-    document.getElementById('forgotPasswordModal').style.display = 'none';
-    document.getElementById('resetEmail').value = '';
-}
-
-function sendResetLink() {
-    const email = document.getElementById('resetEmail').value;
-    if (!email) {
-        alert('Please enter your email address');
-        return;
-    }
-    
-    // Here you would typically send the reset link
-    alert('Password reset link has been sent to your email');
-    closeForgotPasswordModal();
-}
+// (Forgot password removed)
 
 // Success modal
 function closeSuccessModal() {
@@ -340,12 +336,7 @@ function closeSuccessModal() {
 
 // Close modals when clicking outside
 window.addEventListener('click', function(event) {
-    const forgotModal = document.getElementById('forgotPasswordModal');
     const successModal = document.getElementById('successModal');
-    
-    if (event.target === forgotModal) {
-        closeForgotPasswordModal();
-    }
     if (event.target === successModal) {
         closeSuccessModal();
     }
