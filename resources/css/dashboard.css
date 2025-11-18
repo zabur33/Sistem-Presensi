@@ -1,6 +1,6 @@
 body {
     margin: 0;
-    font-family: 'Inter', Arial, sans-serif;
+    font-family: "Inter", Arial, sans-serif;
     background: #fafbfc;
 }
 .main-container {
@@ -61,7 +61,8 @@ body {
     position: relative;
     z-index: 1;
 }
-.sidebar a.active, .sidebar a:hover {
+.sidebar a.active,
+.sidebar a:hover {
     background: #e76f51;
     color: #fff;
 }
@@ -156,7 +157,8 @@ body {
     border-radius: 16px;
     padding: 24px;
     margin-bottom: 24px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
 .profile-info {
@@ -186,13 +188,19 @@ body {
     font-size: 1rem;
 }
 
-.profile-stats {
-    display: flex;
-    gap: 32px;
+b.stat-item {
+    text-align: center;
+    background: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.stat-item {
-    text-align: center;
+.stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .stat-value {
@@ -221,13 +229,15 @@ body {
     padding: 20px;
     display: flex;
     align-items: flex-start;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 2px 4px -1px rgba(0, 0, 0, 0.03);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .stat-icon {
@@ -292,7 +302,8 @@ body {
     border-radius: 16px;
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
 .chart-header {
@@ -352,17 +363,17 @@ body {
     .stats-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .profile-info {
         flex-direction: column;
         text-align: center;
     }
-    
+
     .profile-pic {
         margin-right: 0;
         margin-bottom: 16px;
     }
-    
+
     .profile-stats {
         justify-content: center;
         margin-top: 16px;
@@ -371,7 +382,7 @@ body {
 .chart-box {
     background: #fff;
     border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     padding: 16px 14px 14px 14px;
     margin: 0;
     max-width: 100%;
@@ -415,7 +426,11 @@ body {
 .chart-placeholder {
     width: 100%;
     height: 180px;
-    background: repeating-linear-gradient(90deg, #7ec6d3 0 10px, transparent 10px 20px);
+    background: repeating-linear-gradient(
+        90deg,
+        #7ec6d3 0 10px,
+        transparent 10px 20px
+    );
     border-radius: 6px;
     opacity: 0.7;
 }
@@ -425,9 +440,17 @@ body {
     height: 220px; /* fixed canvas height to prevent auto growth */
 }
 @media (max-width: 900px) {
-    .main-container { flex-direction: column; }
-    .sidebar { width: 100%; height: auto; flex-direction: row; }
-    .content-area { padding: 0; }
+    .main-container {
+        flex-direction: column;
+    }
+    .sidebar {
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+    }
+    .content-area {
+        padding: 0;
+    }
 }
 /* Dropdown Styles */
 .presensi-menu {
@@ -504,10 +527,21 @@ body {
 }
 
 @media (max-width: 600px) {
-    .dashboard-content { padding: 16px 4px; }
-    .sidebar { display: none; }
-    .charts { display: grid; grid-template-columns: 1fr; max-height: none; overflow: visible; padding-right: 0; }
-    .chart-box { max-width: 100%; flex-basis: 100%; }
+    .dashboard-content {
+        padding: 16px 4px;
+    }
+    .sidebar {
+        display: none;
+    }
+    .charts {
+        display: grid;
+        grid-template-columns: 1fr;
+        max-height: none;
+        overflow: visible;
+        padding-right: 0;
+    }
+    .chart-box {
+        max-width: 100%;
+        flex-basis: 100%;
+    }
 }
-
-

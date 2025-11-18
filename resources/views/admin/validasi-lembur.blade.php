@@ -107,14 +107,16 @@
                     @else
                         <span style="color:#7a7a7a;font-size:12px;">Terbaca {{ $it->read_at->diffForHumans() }}</span>
                     @endif
-                    <form method="POST" action="{{ route('admin.overtime.approve', $it->id) }}">
-                        @csrf
-                        <button type="submit" class="btn approve">Approve</button>
-                    </form>
-                    <form method="POST" action="{{ route('admin.overtime.reject', $it->id) }}">
-                        @csrf
-                        <button type="submit" class="btn reject">Reject</button>
-                    </form>
+                    @if($it->status === 'pending')
+                        <form method="POST" action="{{ route('admin.overtime.approve', $it->id) }}">
+                            @csrf
+                            <button type="submit" class="btn approve">Approve</button>
+                        </form>
+                        <form method="POST" action="{{ route('admin.overtime.reject', $it->id) }}">
+                            @csrf
+                            <button type="submit" class="btn reject">Reject</button>
+                        </form>
+                    @endif
                 </div>
             </div>
         </div>

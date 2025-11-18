@@ -49,7 +49,6 @@ class EmployeeRegistrationController extends Controller
             'active' => true,
         ]);
 
-        return redirect()->route('admin.kelola-pegawai')
-            ->with('status', 'Pegawai berhasil diregistrasi.');
+        return back()->with('success', 'Pegawai berhasil diregistrasi!');
     }
 }

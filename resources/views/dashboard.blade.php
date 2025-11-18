@@ -1,657 +1,197 @@
-<!DOCTYPE html>
-<html lang="en">
+﻿<!DOCTYPE html>
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Life Media</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <title>Dashboard - {{ config('app.name') }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-        @vite(['resources/css/app.css', 'resources/css/dashboard.css', 'resources/js/app.js'])
+        @vite(['resources/css/app.css','resources/css/dashboard.css','resources/js/app.js'])
+    @else
+        <link href="{{ asset('build/assets/app-hAZc3-CV.css') }}" rel="stylesheet">
+        <link href="{{ asset('build/assets/dashboard-CILs4XdD.css') }}" rel="stylesheet">
+        <script src="{{ asset('build/assets/app-C0G0cght.js') }}" defer></script>
     @endif
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <style>
-        /* Additional styles for new dashboard content */
-        .dashboard-content {
-            padding: 2rem;
+        :root{
+            --brand:#cc5b60;
+            --brand-dark:#a8444c;
+            --sidebar-bg:#fff3ee;
+            --sidebar-border:#f0d4c9;
+            --muted:#6b7280;
+            --text:#0f172a;
         }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 0.25rem;
-        }
-
-        .stat-card h4 {
-            color: #9ca3af;
-            font-size: 0.75rem;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-card .value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            display: block;
-            line-height: 1.3;
-            margin-top: 0.15rem;
-        }
-
-        .stat-card.total .value { color: #333; }
-        .stat-card.present .value { color: #10b981; }
-        .stat-card.remote .value { color: #3b82f6; }
-        .stat-card.late .value { color: #ef4444; }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            color: #333;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 300px;
-        }
-
-        .chart-legend {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            margin-top: 1rem;
-            font-size: 0.85rem;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 3px;
-        }
-
-        .status-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .location-info {
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-        }
-
-        .location-icon {
-            width: 40px;
-            height: 40px;
-            background: #10b98120;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #10b981;
-            font-size: 1.2rem;
-        }
-
-        .location-details h3 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 0.3rem;
-        }
-
-        .location-details p {
-            font-size: 0.85rem;
-            color: #666;
-        }
-
-        .checkout-btn {
-            background: #10b981;
-            color: white;
-            border: none;
-            padding: 0.8rem 2rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 0.95rem;
-            transition: background 0.3s;
-        }
-
-        .checkout-btn:hover {
-            background: #059669;
-        }
-
-        .calendar {
-            padding: 0.5rem;
-        }
-
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .calendar-header h3 {
-            font-size: 1rem;
-            font-weight: 600;
-        }
-
-        .calendar-nav {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .calendar-nav button {
-            background: none;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            font-size: 1.1rem;
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 0.5rem;
-        }
-
-        .calendar-day {
-            text-align: center;
-            padding: 0.5rem;
-            font-size: 0.85rem;
-        }
-
-        .calendar-day.header {
-            font-weight: 600;
-            color: #666;
-            background: transparent !important;
-            background-color: transparent !important;
-        }
-
-        .calendar-day.date {
-            cursor: pointer;
-            border-radius: 6px;
-            transition: background 0.2s;
-        }
-
-        .calendar-day.date:hover {
-            background: #f3f4f6;
-        }
-
-        .calendar-day.today {
-            background: #667eea;
-            color: white;
-            font-weight: 600;
-        }
-
-        .calendar-day.empty {
-            visibility: hidden;
-        }
-
-        .donut-container {
-            position: relative;
-            height: 250px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* Dropdown menu styles */
-        .submenu {
-            display: none;
-            padding-left: 2.5rem;
-        }
-
-        .submenu.show {
-            display: block;
-        }
-
-        .dropdown-arrow {
-            margin-left: auto;
-            transition: transform 0.2s;
-            width: 16px;
-            height: 16px;
-        }
-
-        .dropdown-arrow.rotated {
-            transform: rotate(180deg);
-        }
-
-        @media (max-width: 1024px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1rem;
-            }
-
-            .stat-card {
-                padding: 1rem;
-            }
-
-            .stat-card .value {
-                font-size: 1.5rem;
-            }
-
-            .status-content {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .checkout-btn {
-                width: 100%;
-            }
-        }
+        .main-container{display:grid;grid-template-columns:260px 1fr;min-height:100vh;background:#fafafa}
+        /* Sidebar */
+        .sidebar{background:var(--sidebar-bg);border-right:1px solid var(--sidebar-border);display:flex;flex-direction:column}
+        .logo{display:flex;align-items:center;gap:10px;padding:14px 18px}
+        .logo .brand-name{font-weight:800;color:#c0505a}
+        .menu{padding:6px 0}
+        .menu-title{color:var(--brand);font-weight:800;font-size:12px;letter-spacing:.08em;padding:0 18px;margin:6px 0 8px}
+        .sidebar ul{list-style:none;margin:0;padding:0}
+        .sidebar a{display:flex;align-items:center;gap:12px;padding:10px 18px;color:#2b2b2b;text-decoration:none;border-radius:10px}
+        .sidebar a:hover{background:#ffe6de}
+        .sidebar a.active{background:var(--brand);color:#fff}
+        .submenu{display:none;padding-left:36px}
+        .submenu.show{display:block}
+        .dropdown-arrow{transition:transform .2s ease}
+        .dropdown-arrow.rotated{transform:rotate(180deg)}
+        .logout{margin-top:auto;padding:14px 18px;color:#c7c7c7}
+        .logout button{background:none;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;width:100%;display:flex;align-items:center;gap:10px;color:#6b7280}
+        /* Header */
+        .header{position:sticky;top:0;z-index:20;background:linear-gradient(90deg,var(--brand-dark),var(--brand));color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+        .header-left{display:flex;align-items:center;gap:10px}
+        .header-title{font-weight:800}
+        .header-icons a{color:#fff;margin-left:16px;display:inline-flex}
+        /* Content */
+        .dashboard-wrap{padding:18px;max-width:1200px;margin:0 auto}
+        .grid{display:grid;gap:18px}
+        .grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+        .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+        .stat-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px}
+        .stat-value{font-weight:800;font-size:26px;color:var(--text)}
+        .stat-label{color:var(--muted);font-size:13px;margin-top:6px}
+        .accent-green{color:#16a34a}.accent-blue{color:#2563eb}.accent-red{color:#dc2626}
+        .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px}
+        .card-header{font-weight:700;color:var(--text);margin-bottom:10px}
+        .chart-container{height:320px;position:relative}
+        .footer{margin:20px 0 4px;padding:12px 0;text-align:center;color:#9ca3af;font-size:12px}
+        @media (max-width:1024px){.main-container{grid-template-columns:1fr}.sidebar{position:fixed;inset:0 auto 0 0;width:260px;transform:translateX(-100%);transition:transform .25s}.sidebar.active{transform:translateX(0)}.grid-4{grid-template-columns:repeat(2,1fr)}}
+        @media (max-width:640px){.grid-4,.grid-2{grid-template-columns:1fr}}
     </style>
 </head>
 <body>
 <div class="main-container">
-    <div class="sidebar">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
         <div>
             <div class="logo">
-                <img src="{{ asset('images/logo2.png') }}" alt="Life Media Logo">
+                <img src="{{ asset('images/logo2.png') }}" alt="Life Media" class="h-10">
             </div>
             <div class="menu">
                 <div class="menu-title">MAIN MENU</div>
                 <ul>
-                    <li><a href="/dashboard" class="active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>Dashboard</a></li>
+                    <li><a href="/dashboard" class="active">Dashboard</a></li>
                     <li class="presensi-menu">
-                        <a href="javascript:void(0)" onclick="togglePresensiDropdown(event)">
-                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                            Presensi
-                            <svg class="dropdown-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
+                        <a href="#" onclick="togglePresensiDropdown(event)" style="justify-content:space-between;display:flex;align-items:center;">
+                            <span style="display:flex;align-items:center;gap:12px;">Presensi</span>
+                            <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9l-7 7-7-7"/></svg>
                         </a>
                         <ul class="submenu" id="presensi-submenu">
                             <li><a href="/presensi/kantor">Kantor</a></li>
                             <li><a href="/presensi/luar-kantor">Luar Kantor</a></li>
                         </ul>
                     </li>
-                    <li><a href="/lembur"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Lembur</a></li>
-                    <li><a href="/rekap-keseluruhan"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Rekap Keseluruhan</a></li>
+                    <li><a href="/lembur">Lembur</a></li>
+                    <li><a href="/rekap-keseluruhan">Rekap Keseluruhan</a></li>
                 </ul>
             </div>
         </div>
         <div class="logout">
-            <form method="POST" action="{{ route('logout') }}" style="display:flex;align-items:center;gap:8px;">
-                @csrf
-                <button type="submit" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:inherit;cursor:pointer;">
-                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
+            <form method="POST" action="{{ route('logout') }}">@csrf
+                <button type="submit">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M7 21a4 4 0 01-4-4V7a4 4 0 014-4h6a4 4 0 014 4v2"/></svg>
                     Logout
                 </button>
             </form>
         </div>
-    </div>
+    </aside>
+
+    <!-- Content -->
     <div class="content-area">
         <div class="header">
             <div class="header-left">
-                <div class="header-logo">
-                    <img src="{{ asset('images/logo2.png') }}" alt="Life Media Logo">
-                </div>
+                <img src="{{ asset('images/logo2.png') }}" class="h-7" alt="Life Media"/>
             </div>
             <div class="header-icons">
-                <div id="notifWrapper" style="position:relative;display:inline-block;">
-                    <a href="#" id="notifBell" onclick="toggleNotifDropdown(event)" title="Notifikasi">
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                        <span id="notifBadge" style="position:absolute;top:-4px;right:-4px;background:#dc2626;color:#fff;border-radius:999px;padding:0 6px;font-size:10px;line-height:18px;height:18px;display:none;">0</span>
-                    </a>
-                    <div id="notifDropdown" style="display:none;position:absolute;right:0;top:28px;background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;min-width:280px;box-shadow:0 12px 24px rgba(0,0,0,0.12);z-index:50;">
-                        <div style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-weight:700;color:#111827;">Notifikasi</div>
-                        <div id="notifList" style="max-height:320px;overflow:auto"></div>
-                    </div>
-                </div>
-                <a href="/profile">
-                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a7.5 7.5 0 0 1 13 0"/></svg>
-                </a>
+                <a href="#" title="Notifikasi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5"/></svg></a>
+                <a href="/profile" title="Profil"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a7.5 7.5 0 0 1 13 0"/></svg></a>
             </div>
         </div>
-        <div class="dashboard-content">
-            <!-- Statistics Cards -->
-                <div class="stats-grid">
-                    <div class="stat-card total">
-                        <h4>Total Hari Kerja</h4>
-                        <div class="value" id="totalWorkdaysVal">22</div>
-                    </div>
-                    <div class="stat-card present">
-                        <h4>Kehadiran Bulan Ini</h4>
-                        <div class="value" id="presentVal">-</div>
-                    </div>
-                    <div class="stat-card remote">
-                        <h4>WFH / Dinas Luar</h4>
-                        <div class="value" id="remoteVal">-</div>
-                    </div>
-                    <div class="stat-card late">
-                        <h4>Keterlambatan</h4>
-                        <div class="value" id="lateVal">-</div>
-                    </div>
-                </div>
 
-                <!-- Main Grid -->
-                <div class="main-grid">
-                    <!-- Grafik Kehadiran -->
-                    <div class="card">
-                        <h2>Grafik Kehadiran</h2>
-                        <div class="chart-container">
-                            <canvas id="attendanceChart"></canvas>
-                        </div>
-                        <div class="chart-legend">
-                            <div class="legend-item">
-                                <div class="legend-color" style="background: #10b981;"></div>
-                                <span>Kantor</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background: #3b82f6;"></div>
-                                <span>Luar Kantor</span>
-                            </div>
-                        </div>
-                    </div>
+        <div class="dashboard-wrap">
+            <h2 style="font-size:22px;font-weight:800;color:#0f172a;margin:4px 0 14px;">Dashboard</h2>
 
-                    <!-- Mode Kerja -->
-                    <div class="card">
-                        <h2>Mode Kerja</h2>
-                        <div class="donut-container">
-                            <canvas id="workModeChart"></canvas>
-                        </div>
-                    </div>
-                </div>
+            <!-- Stats -->
+            <div class="grid grid-4">
+                <div class="stat-card"><div class="stat-value" id="total-work-days">0</div><div class="stat-label">Total Hari Kerja</div></div>
+                <div class="stat-card"><div class="stat-value accent-green" id="present-this-month">0 Hari</div><div class="stat-label">Kehadiran Bulan Ini</div></div>
+                <div class="stat-card"><div class="stat-value accent-blue" id="wfh-outdoor">0 Hari</div><div class="stat-label">WFH / Dinas Luar</div></div>
+                <div class="stat-card"><div class="stat-value accent-red" id="late-count">0x</div><div class="stat-label">Keterlambatan</div></div>
+            </div>
 
-                <div class="main-grid">
-                    <!-- Status Hari Ini -->
-                    <div class="card">
-                        <h2>Status Hari Ini</h2>
-                        <div class="status-content">
-                            <div class="location-info">
-                                <div class="location-icon">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                </div>
-                                <div class="location-details">
-                                    <h3 id="todayLocation">-</h3>
-                                    <p id="todayTimes">Check-in: — | Check-out: —</p>
-                                </div>
-                            </div>
-                            <button class="checkout-btn">Check Out</button>
-                        </div>
+            <!-- Charts -->
+            <div class="grid grid-2" style="margin-top:18px;">
+                <div class="card"><div class="card-header">Grafik Kehadiran</div><div class="chart-container"><canvas id="attendanceChart"></canvas></div></div>
+                <div class="card"><div class="card-header">Mode Kerja</div><div class="chart-container"><canvas id="modeChart"></canvas></div></div>
+            </div>
+
+            <!-- Status Today -->
+            <div class="card" style="margin-top:18px;">
+                <div class="card-header">Status Hari Ini</div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="padding:8px;border-radius:999px;background:#e8faf3;color:#16a34a;display:inline-flex;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
                     </div>
+                    <div>
+                        <div class="text-sm" id="todayLocation" style="font-weight:700;color:#111827;">-</div>
+                        <div class="text-xs" id="todayTimes" style="color:#6b7280;">Check-in: — | Check-out: —</div>
+                    </div>
+                    <button id="checkoutBtn" style="margin-left:auto;padding:8px 12px;border-radius:8px;background:#10b981;color:#fff;display:none;">Check Out</button>
                 </div>
             </div>
+
+            <div class="footer">© {{ date('Y') }} Life Media. All rights reserved.</div>
         </div>
     </div>
+</div>
 
-    <script>
-        // Grafik Kehadiran (Bar Chart)
-        const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
-        const attendanceChart = new Chart(attendanceCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],
-                datasets: []
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 24,
-                        ticks: {
-                            stepSize: 6
-                        },
-                        grid: {
-                            color: '#f3f4f6'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
+<script>
+function togglePresensiDropdown(event){
+    event.preventDefault();
+    const submenu=document.getElementById('presensi-submenu');
+    const arrow=document.querySelector('.presensi-menu .dropdown-arrow');
+    if(!submenu||!arrow) return; const show=!submenu.classList.contains('show');
+    submenu.classList.toggle('show',show); arrow.classList.toggle('rotated',show);
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const barCtx=document.getElementById('attendanceChart');
+    const bar=new Chart(barCtx,{type:'bar',data:{labels:['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],datasets:[
+        {label:'Dinas',data:[3,2,2,1,2,1,2,2,1,2,2,1],backgroundColor:'#f59e0b',borderRadius:6,barPercentage:.7},
+        {label:'Hadir',data:[19,17,22,20,19,21,22,20,21,19,20,18],backgroundColor:'#10b981',borderRadius:6,barPercentage:.7},
+        {label:'WFH',data:[5,7,4,5,6,5,4,6,5,7,6,7],backgroundColor:'#3b82f6',borderRadius:6,barPercentage:.7}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,ticks:{stepSize:5},max:25},x:{grid:{display:false}}}}});
+
+    const pieCtx=document.getElementById('modeChart');
+    const pie=new Chart(pieCtx,{type:'pie',data:{labels:['Dinas','WFH','Hadir'],datasets:[{data:[15,25,60],backgroundColor:['#f59e0b','#3b82f6','#10b981'],borderWidth:0}]} ,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}});
+
+    try{
+        const res=await fetch('/api/dashboard/metrics',{headers:{'Accept':'application/json'}});
+        if(res.ok){
+            const data=await res.json();
+            document.getElementById('total-work-days').textContent = data.stats?.total_work_days ?? 0;
+            document.getElementById('present-this-month').textContent = `${data.stats?.days_present ?? 0} Hari`;
+            document.getElementById('wfh-outdoor').textContent = `${data.stats?.remote_days ?? 0} Hari`;
+            document.getElementById('late-count').textContent = `${data.stats?.late_days ?? 0}x`;
+            if(data.today_status){
+                document.getElementById('todayLocation').textContent = data.today_status.location || '-';
+                document.getElementById('todayTimes').textContent = `Check-in: ${data.today_status.time_in ?? '—'} | Check-out: ${data.today_status.time_out ?? '—'}`;
+                const btn=document.getElementById('checkoutBtn'); if(data.today_status.can_checkout) btn.style.display='inline-flex';
             }
-        });
-
-        // Mode Kerja (Donut Chart)
-        const workModeCtx = document.getElementById('workModeChart').getContext('2d');
-        const workModeChart = new Chart(workModeCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Kantor', 'Luar Kantor'],
-                datasets: [{
-                    data: [0, 0],
-                    backgroundColor: [
-                        '#10b981',
-                        '#3b82f6'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': ' + context.parsed + '%';
-                            }
-                        }
-                    }
-                },
-                cutout: '70%'
-            },
-            plugins: [{
-                id: 'doughnutLabel',
-                afterDatasetDraw(chart) {
-                    const { ctx, data } = chart;
-                    const centerX = chart.getDatasetMeta(0).data[0].x;
-                    const centerY = chart.getDatasetMeta(0).data[0].y;
-
-                    ctx.save();
-                    ctx.font = 'bold 14px Arial';
-                    ctx.fillStyle = '#333';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-
-                    // Draw labels for each segment
-                    data.datasets[0].data.forEach((value, index) => {
-                        const meta = chart.getDatasetMeta(0).data[index];
-                        const angle = (meta.startAngle + meta.endAngle) / 2;
-                        const radius = (meta.innerRadius + meta.outerRadius) / 2;
-
-                        const x = centerX + Math.cos(angle) * radius;
-                        const y = centerY + Math.sin(angle) * radius;
-
-                        ctx.fillStyle = 'white';
-                        ctx.fillText(value, x, y);
-                    });
-
-                    ctx.restore();
-                }
-            }]
-        });
-
-        // Fetch metrics from backend and populate UI
-        async function loadDashboardMetrics() {
-            try {
-                const res = await fetch('/api/dashboard/metrics', { headers: { 'Accept': 'application/json' } });
-                if (!res.ok) throw new Error('HTTP '+res.status);
-                const data = await res.json();
-
-                // Update stats cards
-                const presentDays = data.current_month?.present_days ?? 0;
-                const kantorDays = data.current_month?.kantor_days ?? 0;
-                const luarDays = data.current_month?.luar_kantor_days ?? 0;
-                const lateCount = data.current_month?.late_count ?? 0;
-                const totalWorkdaysEl = document.getElementById('totalWorkdaysVal');
-                const presentEl = document.getElementById('presentVal');
-                const remoteEl = document.getElementById('remoteVal');
-                const lateEl = document.getElementById('lateVal');
-                if (presentEl) presentEl.textContent = presentDays;
-                if (remoteEl) remoteEl.textContent = luarDays;
-                if (lateEl) lateEl.textContent = lateCount;
-
-                // Update attendance bar chart (per month)
-                const labels = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-                const kantorSeries = data.series?.kantor ?? new Array(12).fill(0);
-                const luarSeries = data.series?.luar_kantor ?? new Array(12).fill(0);
-                attendanceChart.data.labels = labels;
-                attendanceChart.data.datasets = [
-                    { label: 'Kantor', data: kantorSeries, backgroundColor: '#10b981' },
-                    { label: 'Luar Kantor', data: luarSeries, backgroundColor: '#3b82f6' }
-                ];
-                attendanceChart.update();
-
-                // Update donut chart as percentage distribution current month
-                const total = Math.max(1, (kantorDays + luarDays));
-                const donut = [
-                    Math.round((kantorDays/total)*100),
-                    Math.round((luarDays/total)*100)
-                ];
-                workModeChart.data.datasets[0].data = donut;
-                workModeChart.update();
-
-                // Update today section
-                const today = data.today;
-                const locEl = document.getElementById('todayLocation');
-                const timesEl = document.getElementById('todayTimes');
-                if (today) {
-                    if (locEl) locEl.textContent = today.location_text || (today.location_type === 'luar_kantor' ? 'Luar Kantor' : 'Kantor');
-                    if (timesEl) timesEl.textContent = `Check-in: ${today.time_in || '—'} | Check-out: ${today.time_out || '—'}`;
-                }
-            } catch (e) {
-                // silent fail on dashboard
-                console.warn('Failed to load dashboard metrics', e);
+            if(data.monthly_data){
+                const dinas=new Array(12).fill(0), hadir=new Array(12).fill(0), wfh=new Array(12).fill(0);
+                data.monthly_data.forEach(m=>{const i=(m.month||1)-1; hadir[i]=+m.present||0; dinas[i]=+m.dinas||0; wfh[i]=+m.wfh||0;});
+                bar.data.datasets[0].data=dinas; bar.data.datasets[1].data=hadir; bar.data.datasets[2].data=wfh; bar.update();
             }
+            if(data.mode_summary){ pie.data.datasets[0].data=[data.mode_summary.dinas||0,data.mode_summary.wfh||0,data.mode_summary.hadir||0]; pie.update(); }
         }
-
-        document.addEventListener('DOMContentLoaded', loadDashboardMetrics);
-
-        // Dropdown functionality
-        function togglePresensiDropdown(event) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            const submenu = document.getElementById('presensi-submenu');
-            const arrow = document.querySelector('.presensi-menu .dropdown-arrow');
-
-            if (submenu && arrow) {
-                const isVisible = submenu.classList.contains('show');
-
-                if (isVisible) {
-                    submenu.classList.remove('show');
-                    arrow.classList.remove('rotated');
-                    localStorage.setItem('presensi-dropdown-collapsed', 'true');
-                } else {
-                    submenu.classList.add('show');
-                    arrow.classList.add('rotated');
-                    localStorage.setItem('presensi-dropdown-collapsed', 'false');
-                }
-            }
-        }
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-            if (!event.target.closest('.presensi-menu')) {
-                const submenu = document.querySelector('.presensi-menu .submenu');
-                const arrow = document.querySelector('.presensi-menu .dropdown-arrow');
-                if (submenu) {
-                    submenu.classList.remove('show');
-                    localStorage.setItem('presensi-dropdown-collapsed', 'true');
-                }
-                if (arrow) arrow.classList.remove('rotated');
-            }
-        });
-
-        // Initialize dropdown state on dashboard
-        window.addEventListener('DOMContentLoaded', function() {
-            const submenu = document.getElementById('presensi-submenu');
-            const arrow = document.querySelector('.presensi-menu .dropdown-arrow');
-
-            if (submenu && arrow) {
-                const isCollapsed = localStorage.getItem('presensi-dropdown-collapsed') === 'true';
-                if (!isCollapsed) {
-                    submenu.classList.add('show');
-                    arrow.classList.add('rotated');
-                }
-            }
-        });
-
-        // Notification functionality
-        function toggleNotifDropdown(e) {
-            e.preventDefault();
-            const dd = document.getElementById('notifDropdown');
-            if (!dd) return;
-            const isVisible = dd.style.display === 'block';
-            dd.style.display = isVisible ? 'none' : 'block';
-            if (!isVisible) {
-                localStorage.setItem('overtime_last_seen', new Date().toISOString());
-                updateBadge([]);
-            }
-        }
-
-        function updateBadge(items) {
-            const badge = document.getElementById('notifBadge');
-            if (!badge) return;
-            const lastSeen = new Date(localStorage.getItem('overtime_last_seen') || 0).getTime();
-            const cnt = (items || []).filter(it => new Date(it.updated_at).getTime() > lastSeen).length;
-            if (cnt > 0) {
-                badge.style.display = 'inline-block';
-                badge.textContent = cnt;
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-
-        // Close notification dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-            if (!event.target.closest('#notifWrapper')) {
-                const dd = document.getElementById('notifDropdown');
-                if (dd) dd.style.display = 'none';
-            }
-        });
-    </script>
+    }catch(e){ console.warn('API metrics tidak tersedia:', e.message); }
+});
+</script>
 </body>
 </html>

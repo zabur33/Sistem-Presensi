@@ -9,14 +9,11 @@
   .stat-card h4 { margin:0; font-size:13px; color:var(--muted); font-weight:600; }
   .stat-card .value { font-size:22px; font-weight:800; color:var(--text); letter-spacing:0.3px; }
   .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+  .full-width { width:100%; margin-bottom:16px; }
   .card { background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; min-height:280px; }
   .card h2 { margin:0 0 12px 0; font-size:16px; font-weight:700; color:var(--text); }
   .chart-area { position:relative; width:100%; height:320px; }
   .donut-area, .pie-area { position:relative; width:100%; height:260px; display:flex; align-items:center; justify-content:center; }
-  .calendar-box { border:1px dashed var(--border); border-radius:8px; padding:10px; color:var(--muted); height:auto; display:grid; grid-template-rows:auto 1fr; gap:8px; overflow:hidden; }
-  .calendar-header { display:flex; align-items:center; gap:8px; justify-content:space-between; }
-  .calendar-title { font-weight:600; color:var(--text); }
-  .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; font-size:12px; color:var(--text); }
   .cal-cell { text-align:center; padding:6px 0; border-radius:6px; min-height:30px; line-height:30px; background:transparent !important; }
   .cal-cell.header { color:var(--muted); font-weight:600; background:transparent !important; }
   .cal-cell.today { background:#1f2937; color:#fff; font-weight:700; }
@@ -37,34 +34,19 @@
     <div class="stat-card"><h4>Lembur Disetujui</h4><div class="value">14</div></div>
   </div>
 
-  <div class="grid-2">
+  <!-- Baris 1: Grafik Rekap Kehadiran -->
+  <div class="full-width">
     <div class="card">
       <h2>Rekap Kehadiran, Tidak Hadir & Lembur</h2>
       <div class="chart-area"><canvas id="barChart"></canvas></div>
     </div>
+  </div>
+
+  <!-- Baris 2: Dua Grafik Sejajar -->
+  <div class="grid-2">
     <div class="card">
       <h2>Lokasi Kerja Pegawai</h2>
       <div class="donut-area"><canvas id="donutChart"></canvas></div>
-    </div>
-  </div>
-
-  <div class="grid-2">
-    <div class="card">
-      <h2>Kalender Kehadiran</h2>
-      <div class="calendar-box">
-        <div class="calendar-header">
-          <div class="calendar-title">November 2025</div>
-          <div class="calendar-nav"><button>&lt;</button><button>&gt;</button></div>
-        </div>
-        <div class="calendar-grid">
-          <div class="cal-cell header">Su</div><div class="cal-cell header">Mo</div><div class="cal-cell header">Tu</div><div class="cal-cell header">We</div><div class="cal-cell header">Th</div><div class="cal-cell header">Fr</div><div class="cal-cell header">Sa</div>
-          <div class="cal-cell">27</div><div class="cal-cell">28</div><div class="cal-cell">29</div><div class="cal-cell">30</div><div class="cal-cell">31</div><div class="cal-cell">1</div><div class="cal-cell">2</div>
-          <div class="cal-cell">3</div><div class="cal-cell today">4</div><div class="cal-cell">5</div><div class="cal-cell">6</div><div class="cal-cell">7</div><div class="cal-cell">8</div><div class="cal-cell">9</div>
-          <div class="cal-cell">10</div><div class="cal-cell">11</div><div class="cal-cell">12</div><div class="cal-cell">13</div><div class="cal-cell">14</div><div class="cal-cell">15</div><div class="cal-cell">16</div>
-          <div class="cal-cell">17</div><div class="cal-cell">18</div><div class="cal-cell">19</div><div class="cal-cell">20</div><div class="cal-cell">21</div><div class="cal-cell">22</div><div class="cal-cell">23</div>
-          <div class="cal-cell">24</div><div class="cal-cell">25</div><div class="cal-cell">26</div><div class="cal-cell">27</div><div class="cal-cell">28</div><div class="cal-cell">29</div><div class="cal-cell">30</div>
-        </div>
-      </div>
     </div>
     <div class="card">
       <h2>Rasio Hadir vs Tidak Hadir</h2>

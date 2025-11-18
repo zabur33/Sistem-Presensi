@@ -62,8 +62,7 @@
                 <th style="min-width:120px;">Durasi</th>
                 <th style="min-width:120px;">Tanggal</th>
                 <th style="min-width:120px;">Lokasi</th>
-                <th style="min-width:140px;">Status</th>
-                <th style="min-width:200px;">Aksi</th>
+                <th style="min-width:200px;">Status Presensi</th>
             </tr>
         </thead>
         <tbody>
@@ -81,30 +80,31 @@
                     <td>{{ $a->location_type === 'luar_kantor' ? 'Luar Kantor' : 'Kantor' }}</td>
                     <td>
                         @php
-                            $ver = $a->verification ?? 'Pending';
-                            $cls = $ver==='Berhasil' ? 'ok' : ($ver==='Ditolak' ? 'danger' : 'warn');
-                            $label = $ver==='Berhasil' ? 'Terverifikasi' : ($ver==='Ditolak' ? 'Ditolak' : 'Pending');
+                            $now = now();
+                            $attendanceDate = \Carbon\Carbon::parse($a->date);
+                            $isLate = $attendanceDate->isAfter($now->copy()->setTime(9, 0, 0));
+                            $isComplete = $a->duration_minutes !== null && $a->duration_minutes > 0;
+
+                            if ($a->verification === 'Ditolak') {
+                                $status = 'Ditolak';
+                                $cls = 'danger';
+                            } elseif ($isComplete) {
+                                $status = 'Selesai';
+                                $cls = 'ok';
+                            } elseif ($isLate) {
+                                $status = 'Terlambat';
+                                $cls = 'warn';
+                            } else {
+                                $status = 'Belum Selesai';
+                                $cls = 'warn';
+                            }
                         @endphp
-                        <span class="badge {{ $cls }}">{{ $label }}</span>
-                    </td>
-                    <td style="display:flex;gap:8px;flex-wrap:wrap;">
-                        @if(($a->verification ?? 'Pending') !== 'Berhasil')
-                            <form method="POST" action="{{ route('admin.attendance.verify', $a->id) }}">
-                                @csrf
-                                <button type="submit" class="btn verify">Verifikasi</button>
-                            </form>
-                        @endif
-                        @if(($a->verification ?? 'Pending') !== 'Ditolak')
-                            <form method="POST" action="{{ route('admin.attendance.reject', $a->id) }}">
-                                @csrf
-                                <button type="submit" class="btn reject">Tolak</button>
-                            </form>
-                        @endif
+                        <span class="badge {{ $cls }}">{{ $status }}</span>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" style="text-align:center;color:#7a7a7a;">Tidak ada data pada rentang tanggal ini.</td>
+                    <td colspan="4" style="text-align:center;color:#7a7a7a;">Tidak ada data pada rentang tanggal ini.</td>
                 </tr>
             @endforelse
         </tbody>

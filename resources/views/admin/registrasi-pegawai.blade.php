@@ -4,10 +4,14 @@
 <div class="page-title" style="margin-bottom:16px;">
     <h1 style="font-weight:800; font-size:28px;">Mohon di isi data di bawah ini!</h1>
     <p style="color:#7a7a7a; margin-top:6px;">Lengkapi data pegawai untuk membuat akun baru.</p>
-    </div>
+</div>
+
+@if(session('success'))
+    <div id="success-message" data-message="{{ session('success') }}"></div>
+@endif
 
 <div class="card" style="background:#f4e9e4; border:1px solid #d9c7bf; border-radius:18px; padding:24px; box-shadow:0 1px 0 rgba(0,0,0,0.02);">
-    <form method="POST" action="#" style="display:grid; grid-template-columns: 1fr 1fr; gap:18px;">
+    <form id="registrationForm" method="POST" action="{{ route('admin.registrasi-pegawai.store') }}" style="display:grid; grid-template-columns: 1fr 1fr; gap:18px;" autocomplete="off" onsubmit="return handleFormSubmit(event)">
         @csrf
 
         <div>
@@ -21,7 +25,7 @@
 
         <div>
             <label class="form-label">Email</label>
-            <input class="form-input" type="email" name="email" placeholder="email@domain.com" required>
+            <input class="form-input" type="email" name="email" placeholder="email@domain.com" required autocomplete="new-email">
         </div>
         <div>
             <label class="form-label">Jenis Kelamin</label>
@@ -57,11 +61,11 @@
 
         <div>
             <label class="form-label">Password Awal</label>
-            <input class="form-input" type="password" name="password" placeholder="Password awal" required>
+            <input class="form-input" type="password" name="password" placeholder="Password awal" required autocomplete="new-password">
         </div>
         <div>
             <label class="form-label">Konfirmasi Password</label>
-            <input class="form-input" type="password" name="password_confirmation" placeholder="Ulangi password" required>
+            <input class="form-input" type="password" name="password_confirmation" placeholder="Ulangi password" required autocomplete="new-password">
         </div>
 
         <div style="grid-column: span 2; display:flex; align-items:center; gap:10px; margin-top:6px;">
@@ -83,4 +87,119 @@
         .card form{ grid-template-columns:1fr; }
     }
 </style>
+
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
 @endsection
+
+@push('scripts')
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Fungsi untuk menangani submit form
+    async function handleFormSubmit(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Tampilkan popup sukses
+                await Swal.fire({
+                    title: 'Berhasil!',
+                    text: data.message || 'Pegawai berhasil diregistrasi!',
+                    icon: 'success',
+                    confirmButtonColor: '#b34555',
+                    confirmButtonText: 'OK',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    allowEnterKey: false,
+                    showConfirmButton: true
+                });
+
+                // Reset form
+                form.reset();
+
+                // Reset file inputs
+                document.querySelectorAll('input[type="file"]').forEach(input => {
+                    input.value = '';
+                });
+
+                // Reset select elements
+                document.querySelectorAll('select').forEach(select => {
+                    select.selectedIndex = 0;
+                });
+
+                // Reset checkboxes
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+
+                // Hapus pesan error jika ada
+                const errorElements = document.querySelectorAll('.error-message');
+                errorElements.forEach(el => el.remove());
+
+            } else {
+                // Tampilkan pesan error validasi
+                let errorMessage = 'Terjadi kesalahan. Silakan coba lagi.';
+                if (data.errors) {
+                    errorMessage = Object.values(data.errors).join('\n');
+                } else if (data.message) {
+                    errorMessage = data.message;
+                }
+
+                await Swal.fire({
+                    title: 'Error!',
+                    text: errorMessage,
+                    icon: 'error',
+                    confirmButtonColor: '#b34555',
+                    confirmButtonText: 'OK'
+                });
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            await Swal.fire({
+                title: 'Error!',
+                text: 'Terjadi kesalahan. Silakan coba lagi.',
+                icon: 'error',
+                confirmButtonColor: '#b34555',
+                confirmButtonText: 'OK'
+            });
+        }
+    }
+
+    // Tetap pertahankan kode untuk menampilkan pesan sukses dari redirect
+    document.addEventListener('DOMContentLoaded', function() {
+        const successMessage = document.getElementById('success-message');
+        if (successMessage) {
+            const message = successMessage.getAttribute('data-message');
+
+            Swal.fire({
+                title: 'Berhasil!',
+                text: message,
+                icon: 'success',
+                confirmButtonColor: '#b34555',
+                confirmButtonText: 'OK',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+                showConfirmButton: true
+            });
+        }
+    });
+</script>
+@endpush

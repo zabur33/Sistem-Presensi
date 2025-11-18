@@ -77,15 +77,6 @@
             <option value="Tanpa Keterangan" @selected(($statusFilter ?? '')==='Tanpa Keterangan')>Tanpa Keterangan</option>
         </select>
     </div>
-    <div>
-        <label class="form-label">Verifikasi</label>
-        <select class="form-input" name="verification">
-            <option value="">Semua</option>
-            <option value="—" @selected(($verificationFilter ?? '')==='—')>—</option>
-            <option value="Berhasil" @selected(($verificationFilter ?? '')==='Berhasil')>Berhasil</option>
-            <option value="Ditolak" @selected(($verificationFilter ?? '')==='Ditolak')>Ditolak</option>
-        </select>
-    </div>
     <button type="submit" class="btn-show" style="background:#fd9b63;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-weight:700;">Tampilkan</button>
     <style>
         .form-label{display:block;margin-bottom:6px;font-weight:600;color:#5b4e48}
@@ -102,14 +93,12 @@
             <tr>
                 <th>Nama</th>
                 <th>Tanggal</th>
-                <th>Masuk</th>
-                <th>Pulang</th>
-                <th>Status</th>
-                <th>Tipe</th>
+                <th>Jam Masuk</th>
+                <th>Jam Keluar</th>
                 <th>Lokasi</th>
+                <th>Status</th>
                 <th>Kegiatan</th>
                 <th>Foto</th>
-                <th>Verifikasi</th>
             </tr>
         </thead>
         <tbody>
@@ -120,7 +109,6 @@
                     <td>{{ $row['time_in'] }}</td>
                     <td>{{ $row['time_out'] }}</td>
                     <td>{{ $row['status'] }}</td>
-                    <td>{{ $row['location_type'] === 'luar_kantor' ? 'Luar Kantor' : ($row['location_type'] === 'kantor' ? 'Dalam Kantor' : '—') }}</td>
                     <td>{{ $row['location_text'] ?? '—' }}</td>
                     <td>{{ ($row['location_type'] === 'luar_kantor') ? ($row['activity_text'] ?? '—') : '—' }}</td>
                     <td>
@@ -128,16 +116,6 @@
                             <a href="{{ asset('storage/'.$row['photo_path']) }}" target="_blank">Lihat</a>
                         @else
                             —
-                        @endif
-                    </td>
-                    <td style="display:flex; align-items:center; gap:10px;">
-                        @php $type = $row['verification_type'] ?? 'neutral'; @endphp
-                        <span class="badge {{ $type === 'success' ? 'success' : '' }}">{{ $row['verification'] }}</span>
-                        @if(($row['verification'] ?? '') !== 'Berhasil' && ($row['id'] ?? null))
-                            <form method="POST" action="{{ route('admin.attendance.verify', $row['id']) }}" onsubmit="return confirm('Verifikasi presensi ini?');">
-                                @csrf
-                                <button type="submit" style="background:#b34555;color:#fff;border:none;padding:6px 10px;border-radius:8px;font-size:12px;">Verifikasi</button>
-                            </form>
                         @endif
                     </td>
                 </tr>
