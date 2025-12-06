@@ -8,6 +8,14 @@
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/css/dashboard.css', 'resources/js/app.js'])
     @endif
+    <style>
+    @media (max-width: 600px){
+        .mobile-drawer .sidebar svg{width:22px!important;height:22px!important}
+        .mobile-drawer .sidebar img{max-width:140px;height:auto}
+        .mobile-drawer .sidebar a{padding:10px 16px}
+        .mobile-drawer .sidebar .menu-title{margin-left:16px}
+    }
+    </style>
 </head>
 <body>
 <div class="main-container">
@@ -17,6 +25,9 @@
     <div class="content-area">
         <div class="header">
             <div class="header-left">
+                <button class="mobile-menu-btn" id="aMobileMenuBtn" aria-label="Buka menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
                 <div class="header-logo">
                     <img src="{{ asset('images/logo2.png') }}" alt="Life Media Logo">
                 </div>
@@ -35,13 +46,24 @@
                         <div id="adminNotifList" style="max-height:320px;overflow:auto"></div>
                     </div>
                 </div>
-                <a href="/admin/profile" aria-label="Kelola Profile" title="Kelola Profile" 
+                <a href="/admin/profile" aria-label="Kelola Profile" title="Kelola Profile"
                    style="display:inline-flex; align-items:center; justify-content:center; background:transparent; color:#ffffff; padding:0; margin:0; text-decoration:none;">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:24px;height:24px">
                         <circle cx="12" cy="8" r="4"/>
                         <path d="M5.5 21a7.5 7.5 0 0 1 13 0"/>
                     </svg>
                 </a>
+            </div>
+        </div>
+        <div class="mobile-drawer" id="aMobileDrawer" aria-hidden="true">
+            <div class="drawer-backdrop" id="aDrawerBackdrop"></div>
+            <div class="drawer-panel">
+                <button class="drawer-close" id="aDrawerClose" aria-label="Tutup menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                <div class="sidebar">
+                    @include('admin.partials.sidebar')
+                </div>
             </div>
         </div>
         <div class="dashboard-content">
@@ -102,6 +124,19 @@ function startAdminNotif(){
     adminNotifTimer = setInterval(fetchAndRenderAdminComplaints, 30000);
 }
 window.addEventListener('load', startAdminNotif);
+</script>
+<script>
+(function(){
+    const drawer = document.getElementById('aMobileDrawer');
+    const openBtn = document.getElementById('aMobileMenuBtn');
+    const closeBtn = document.getElementById('aDrawerClose');
+    const backdrop = document.getElementById('aDrawerBackdrop');
+    function open(){ if(drawer){ drawer.classList.add('open'); document.body.style.overflow='hidden'; } }
+    function close(){ if(drawer){ drawer.classList.remove('open'); document.body.style.overflow=''; } }
+    if(openBtn) openBtn.addEventListener('click', open);
+    if(closeBtn) closeBtn.addEventListener('click', close);
+    if(backdrop) backdrop.addEventListener('click', close);
+})();
 </script>
 </body>
 </html>

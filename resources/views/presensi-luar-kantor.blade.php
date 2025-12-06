@@ -55,6 +55,9 @@
     <div class="content-area">
         <div class="header">
             <div class="header-left">
+                <button class="mobile-menu-btn" id="uMobileMenuBtn" aria-label="Buka menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
                 <div class="header-logo">
                     <img src="{{ asset('images/logo2.png') }}" alt="Life Media Logo">
                 </div>
@@ -73,6 +76,17 @@
                 <a href="/profile">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a7.5 7.5 0 0 1 13 0"/></svg>
                 </a>
+            </div>
+        </div>
+        <div class="mobile-drawer" id="uMobileDrawer" aria-hidden="true">
+            <div class="drawer-backdrop" id="uDrawerBackdrop"></div>
+            <div class="drawer-panel">
+                <button class="drawer-close" id="uDrawerClose" aria-label="Tutup menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                <div class="sidebar">
+                    @include('user.partials.sidebar')
+                </div>
             </div>
         </div>
         <div class="presensi-content">
@@ -205,7 +219,7 @@
                         Ambil Foto
                     </button>
                 </div>
-                
+
                 <!-- Photo Preview -->
                 <div class="photo-preview" id="photoPreview" style="display: none;">
                     <img id="previewImage" src="" alt="Preview">
@@ -581,7 +595,7 @@ function handlePresensi(type) {
     const button = document.getElementById(`btn-${type}`);
     const statusBadge = document.getElementById(`${type}-status`);
     const timeDisplay = document.getElementById(`${type}-time`);
-    
+
     // Custom flows
     if (type === 'istirahat') { // start break
         startBreak();
@@ -619,7 +633,7 @@ function handlePresensi(type) {
     // Record attendance (kedatangan)
     attendanceState[type] = true;
     attendanceTimes[type] = currentTime;
-    
+
     // Update UI
     button.disabled = true;
     button.classList.add('completed');
@@ -629,7 +643,7 @@ function handlePresensi(type) {
         </svg>
         Selesai
     `;
-    
+
     // Set status & waktu tampil
     if (type === 'kedatangan') {
         // Tentukan telat atau tepat waktu berdasarkan WORK_START
@@ -646,10 +660,10 @@ function handlePresensi(type) {
         statusBadge.classList.add('completed');
         timeDisplay.textContent = currentTime;
     }
-    
+
     // Enable next button in sequence
     enableNextButton(type);
-    
+
     // Sync check-in when kedatangan
     if (type === 'kedatangan') {
         postJSON('{{ route('attendance.checkin') }}', { location_type: 'luar_kantor', client_time: currentTime }).catch(() => {});
@@ -759,22 +773,22 @@ function showSuccessModal(type, time) {
     const recordedTime = document.getElementById('recorded-time');
     const modalLocation = document.getElementById('modal-location');
     const recordedLocation = document.getElementById('recorded-location');
-    
+
     const messages = {
         kedatangan: 'Presensi kedatangan berhasil dicatat.',
         istirahat: 'Presensi istirahat berhasil dicatat.',
         kembali: 'Presensi kembali dari istirahat berhasil dicatat.',
         kepulangan: 'Presensi kepulangan berhasil dicatat.'
     };
-    
+
     message.textContent = messages[type];
     recordedTime.textContent = time;
-    
+
     if (currentLocation) {
         modalLocation.style.display = 'block';
         recordedLocation.textContent = currentLocation;
     }
-    
+
     modal.style.display = 'flex';
 }
 
@@ -792,7 +806,7 @@ function startCamera() {
     const video = document.getElementById('cameraVideo');
     const photoPreview = document.getElementById('photoPreview');
     const cameraBtn = document.getElementById('cameraBtn');
-    
+
     // Hide camera area and show preview
     cameraArea.style.display = 'none';
     cameraPreview.style.display = 'block';
@@ -809,7 +823,7 @@ function startCamera() {
         `;
         cameraBtn.classList.remove('completed');
     }
-    
+
     // Access camera with wider field of view and better quality
     const constraints = {
         video: {
@@ -826,12 +840,12 @@ function startCamera() {
     .then(function(stream) {
         cameraStream = stream;
         video.srcObject = stream;
-        
+
         // Get actual video track settings
         const videoTrack = stream.getVideoTracks()[0];
         const settings = videoTrack.getSettings();
         console.log('Camera settings:', settings);
-        
+
         // Update video element to match actual resolution
         video.addEventListener('loadedmetadata', function() {
             console.log('Video dimensions:', video.videoWidth, 'x', video.videoHeight);
@@ -839,12 +853,12 @@ function startCamera() {
     })
     .catch(function(error) {
         console.error('Error accessing camera:', error);
-        
+
         // Fallback to basic camera access if high resolution fails
-        navigator.mediaDevices.getUserMedia({ 
-            video: { 
+        navigator.mediaDevices.getUserMedia({
+            video: {
                 facingMode: 'environment'
-            } 
+            }
         })
         .then(function(stream) {
             cameraStream = stream;
@@ -864,7 +878,7 @@ function stopCamera() {
         cameraStream.getTracks().forEach(track => track.stop());
         cameraStream = null;
     }
-    
+
     document.getElementById('cameraArea').style.display = 'block';
     document.getElementById('cameraPreview').style.display = 'none';
 }
@@ -873,14 +887,14 @@ function capturePhoto() {
     const video = document.getElementById('cameraVideo');
     const canvas = document.getElementById('captureCanvas');
     const context = canvas.getContext('2d');
-    
+
     // Set canvas dimensions to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    
+
     // Draw video frame to canvas
     context.drawImage(video, 0, 0);
-    
+
     // Convert to blob
     canvas.toBlob(function(blob) {
         const reader = new FileReader();
@@ -930,14 +944,14 @@ function capturePhoto() {
 
 function adjustZoom(delta) {
     if (!cameraStream) return;
-    
+
     const videoTrack = cameraStream.getVideoTracks()[0];
     const capabilities = videoTrack.getCapabilities();
-    
+
     if (capabilities.zoom) {
-        currentZoom = Math.max(capabilities.zoom.min, 
+        currentZoom = Math.max(capabilities.zoom.min,
                       Math.min(capabilities.zoom.max, currentZoom + delta));
-        
+
         videoTrack.applyConstraints({
             advanced: [{ zoom: currentZoom }]
         }).catch(error => {
@@ -960,11 +974,11 @@ function enableAttendanceButtons() {
 function getCurrentLocation() {
     const locationText = document.getElementById('locationText');
     const locationInput = document.getElementById('locationInput');
-    
+
     if (navigator.geolocation) {
         locationText.textContent = 'Mendeteksi lokasi...';
         locationInput.value = 'Mendeteksi lokasi...';
-        
+
         navigator.geolocation.getCurrentPosition(
             function(position) {
                 const lat = position.coords.latitude;
@@ -973,7 +987,7 @@ function getCurrentLocation() {
                 currentLat = lat;
                 currentLng = lng;
                 currentAccuracy = acc;
-                
+
                 // Reverse geocode via backend (Google Maps)
                 fetch(`{{ route('reverse.geocode') }}?lat=${lat}&lng=${lng}`)
                     .then(r => r.ok ? r.json() : Promise.reject())
@@ -1020,12 +1034,12 @@ function getCurrentLocation() {
 function saveActivity() {
     const activityInput = document.getElementById('activityInput');
     const activity = activityInput.value.trim();
-    
+
     if (activity === '') {
         alert('Silakan masukkan keterangan kegiatan terlebih dahulu.');
         return;
     }
-    
+
     activityDescription = activity;
     // Push metadata-only update to backend (no photo required)
     const fd = new FormData();
@@ -1090,7 +1104,7 @@ window.addEventListener('load', function() {
     }).catch(err => {
         console.warn('Gagal mendapatkan lokasi:', err);
     });
-    
+
     // Show submenu on presensi pages by default - but allow toggle
     const submenu = document.getElementById('presensi-submenu');
     const arrow = document.querySelector('.presensi-menu .dropdown-arrow');
@@ -1128,27 +1142,17 @@ window.addEventListener('click', function(event) {
 function togglePresensiDropdown(event) {
     event.preventDefault();
     event.stopPropagation();
-    
-    const submenu = document.getElementById('presensi-submenu');
-    const arrow = document.querySelector('.presensi-menu .dropdown-arrow');
-    
-    if (submenu && arrow) {
+    const root = event.target.closest('.presensi-menu');
+    if(!root) return false;
+    const submenu = root.querySelector('.submenu');
+    const arrow = root.querySelector('.dropdown-arrow');
+    if (submenu) {
         const isVisible = submenu.classList.contains('show');
-        
-        if (isVisible) {
-            // Hide submenu
-            submenu.classList.remove('show');
-            arrow.classList.remove('rotated');
-            // Save state to localStorage
-            localStorage.setItem('presensi-dropdown-collapsed', 'true');
-        } else {
-            // Show submenu
-            submenu.classList.add('show');
-            arrow.classList.add('rotated');
-            // Save state to localStorage
-            localStorage.setItem('presensi-dropdown-collapsed', 'false');
-        }
+        submenu.classList.toggle('show', !isVisible);
+        if (arrow) arrow.classList.toggle('rotated', !isVisible);
+        localStorage.setItem('presensi-dropdown-collapsed', isVisible ? 'true' : 'false');
     }
+    return false;
 }
 
 // Close dropdown when clicking outside
@@ -1197,6 +1201,20 @@ function updateBadge(items){
     const cnt = (items||[]).filter(it=> new Date(it.updated_at).getTime() > lastSeen).length;
     if(cnt>0){ badge.style.display='inline-block'; badge.textContent=cnt; } else { badge.style.display='none'; }
 }
+</script>
+<script>
+// Mobile Drawer toggle
+(function(){
+    const drawer = document.getElementById('uMobileDrawer');
+    const openBtn = document.getElementById('uMobileMenuBtn');
+    const closeBtn = document.getElementById('uDrawerClose');
+    const backdrop = document.getElementById('uDrawerBackdrop');
+    function open(){ if(drawer){ drawer.classList.add('open'); document.body.style.overflow='hidden'; } }
+    function close(){ if(drawer){ drawer.classList.remove('open'); document.body.style.overflow=''; } }
+    if(openBtn) openBtn.addEventListener('click', open);
+    if(closeBtn) closeBtn.addEventListener('click', close);
+    if(backdrop) backdrop.addEventListener('click', close);
+})();
 </script>
 </body>
 </html>
