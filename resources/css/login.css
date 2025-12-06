@@ -160,29 +160,45 @@ body {
 .error {
     font-size: 0.9rem;
 }
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
     .container {
         flex-direction: column;
+        height: auto;
+        padding: clamp(16px, 4vw, 28px);
+        gap: clamp(12px, 3vw, 20px);
     }
     .left,
     .right {
         flex: unset;
-        height: 50vh;
+        height: auto;
     }
     .login-box {
         height: auto;
+        max-width: min(560px, 100%);
+        width: 100%;
+        margin: 0 auto;
+        padding: clamp(32px, 5vw, 48px) clamp(22px, 5vw, 36px);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        border-radius: 16px;
     }
 }
 @media (max-width: 600px) {
     .container {
         flex-direction: column;
+        height: 100vh;
+        padding: clamp(16px, 5vw, 24px);
+        gap: clamp(10px, 3vw, 16px);
+        justify-content: center;
+        align-items: center;
     }
     .left {
         display: none;
     }
     .right {
-        height: 100vh;
-        padding: 24px;
+        height: auto;
+        padding: 0;
+        width: 100%;
+        max-width: 520px;
     }
 }
 @media (min-width: 1280px) {

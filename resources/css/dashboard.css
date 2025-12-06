@@ -519,17 +519,23 @@ b.stat-item {
     width: 100%;
     height: 220px; /* fixed canvas height to prevent auto growth */
 }
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
     .main-container {
         flex-direction: column;
     }
     .sidebar {
-        width: 100%;
-        height: auto;
-        flex-direction: row;
+        display: none;
+    }
+    .mobile-menu-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
     .content-area {
         padding: 0;
+    }
+    .dashboard-content {
+        padding: 20px 16px;
     }
 }
 /* Dropdown Styles */
