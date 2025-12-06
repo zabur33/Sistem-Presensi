@@ -38,8 +38,13 @@
             </div>
         </div>
         <div class="logout">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
-            Logout
+            <form method="POST" action="{{ route('logout') }}" style="display:flex;align-items:center;gap:8px;">
+                @csrf
+                <button type="submit" style="background:none;border:none;color:inherit;display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
+                    Logout
+                </button>
+            </form>
         </div>
     </div>
     <div class="content-area">
@@ -81,12 +86,12 @@
                         @csrf
                         <div class="form-group">
                             <label for="name">Name*</label>
-                            <input type="text" id="name" name="name" value="Ilham Wahyudi" required>
+                            <input type="text" id="name" name="name" value="{{ auth()->user()->name ?? '' }}" required>
                         </div>
 
                         <div class="form-group">
                             <label for="email">Email Address*</label>
-                            <input type="email" id="email" name="email" value="ilham.wahyudi@lifemedia.com" required>
+                            <input type="email" id="email" name="email" value="{{ auth()->user()->email ?? '' }}" required>
                         </div>
 
                         <div class="form-group">
@@ -113,12 +118,12 @@
 
                         <div class="form-group">
                             <label for="phone">Phone Number</label>
-                            <input type="tel" id="phone" name="phone" value="+62 812-3456-7890" placeholder="Enter phone number">
+                            <input type="tel" id="phone" name="phone" value="{{ optional(auth()->user()->employee)->phone ?? '' }}" placeholder="Enter phone number">
                         </div>
 
                         <div class="form-group">
                             <label for="position">Position</label>
-                            <input type="text" id="position" name="position" value="Staff IT" placeholder="Enter position">
+                            <input type="text" id="position" name="position" value="{{ optional(auth()->user()->employee)->position ?? '' }}" placeholder="Enter position">
                         </div>
 
                         <div class="form-actions">
@@ -142,8 +147,8 @@
                             <input type="file" id="profileImageInput" name="avatar" accept="image/*" style="display: none;" form="editProfileForm">
                         </div>
                         <div class="profile-info">
-                            <h3 id="profileName">Ilham Wahyudi</h3>
-                            <div id="profileRole" class="role">Staff IT</div>
+                            <h3 id="profileName">{{ auth()->user()->name ?? '' }}</h3>
+                            <div id="profileRole" class="role">{{ optional(auth()->user()->employee)->position ?? '' }}</div>
                         </div>
                     </div>
                 </div>
@@ -209,12 +214,12 @@
 
 <script>
 // Store original values for comparison
-let originalValues = {
-    name: 'Ilham Wahyudi',
-    email: 'ilham.wahyudi@lifemedia.com',
-    phone: '+62 812-3456-7890',
-    position: 'Staff IT'
-};
+let originalValues = {!! json_encode([
+    'name' => auth()->user()->name ?? '',
+    'email' => auth()->user()->email ?? '',
+    'phone' => optional(auth()->user()->employee)->phone ?? '',
+    'position' => optional(auth()->user()->employee)->position ?? '',
+]) !!};
 
 // Dropdown functionality
 function togglePresensiDropdown(event) {

@@ -24,12 +24,21 @@ class EmployeeRegistrationController extends Controller
             'password' => ['required','confirmed','min:6'],
             'nip' => ['nullable','string','max:50', Rule::unique('employees','nip')],
             'gender' => ['nullable','in:L,P'],
-            'birth_date' => ['nullable','date'],
+            'birth_date' => ['nullable','date','before_or_equal:today'],
             'address' => ['nullable','string','max:255'],
             'position' => ['nullable','string','max:100'],
             'phone' => ['nullable','string','max:50'],
             'division' => ['nullable','string','max:100'],
             'is_admin' => ['nullable','boolean'],
+        ], [
+            'email.unique' => 'Email sudah terdaftar. Gunakan email lain.',
+            'nip.unique' => 'NIP sudah terdaftar.',
+            'password.confirmed' => 'Konfirmasi password tidak sama.',
+            'password.min' => 'Password minimal :min karakter.',
+            'birth_date.before_or_equal' => 'Tanggal lahir tidak boleh melebihi hari ini.',
+            'name.required' => 'Nama wajib diisi.',
+            'email.required' => 'Email wajib diisi.',
+            'password.required' => 'Password wajib diisi.',
         ]);
 
         $user = User::create([
@@ -49,6 +58,9 @@ class EmployeeRegistrationController extends Controller
             'active' => true,
         ]);
 
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Pegawai berhasil diregistrasi!']);
+        }
         return back()->with('success', 'Pegawai berhasil diregistrasi!');
     }
 }

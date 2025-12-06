@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\ComplaintController as UserComplaintController;
 use App\Http\Controllers\Admin\ComplaintController as AdminComplaintController;
@@ -18,7 +19,7 @@ use App\Http\Controllers\Admin\EmployeeRegistrationController;
 use App\Http\Controllers\ReverseGeocodeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\ProfileController;
+// ProfileController already imported above; ensure only one import exists
 
 Route::get('/', function () {
     return view('login');
@@ -128,6 +129,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/profile', function () {
         return view('admin.profile');
     })->name('admin.profile');
+    Route::post('/profile', [ProfileController::class, 'update'])->name('admin.profile.update');
 
     // Admin: complaint notifications feed (DB)
     Route::get('/complaints/notifications', [AdminComplaintController::class, 'notifications'])->name('admin.complaints.notifications');

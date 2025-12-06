@@ -16,6 +16,16 @@
         .mobile-drawer .sidebar a{padding:10px 16px}
         .mobile-drawer .sidebar .menu-title{margin-left:16px}
     }
+    @media (min-width: 601px){
+        .mobile-drawer{display:none!important}
+    }
+    /* Safety: drawer should not catch events unless open */
+    .mobile-drawer{pointer-events:none}
+    .mobile-drawer .drawer-panel{pointer-events:auto}
+    .mobile-drawer.open{pointer-events:auto}
+    /* Force-hide drawer and backdrop unless open */
+    .mobile-drawer:not(.open){display:none!important}
+    .mobile-drawer:not(.open) .drawer-backdrop{display:none!important}
     </style>
     @stack('head')
 </head>
@@ -30,9 +40,9 @@
                 <button class="mobile-menu-btn" id="uMobileMenuBtn" aria-label="Buka menu">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
                 </button>
-                <div class="header-logo">
+                <a href="/dashboard" class="header-logo" aria-label="Kembali ke Dashboard">
                     <img src="{{ asset('images/logo2.png') }}" alt="Life Media Logo">
-                </div>
+                </a>
             </div>
             <div class="header-icons" style="margin-left:auto; display:flex; align-items:center; gap:0;">
                 <div id="notifWrapper" style="position:relative;display:inline-block;">
@@ -123,6 +133,12 @@ window.addEventListener('load', startNotifPolling);
     if(openBtn) openBtn.addEventListener('click', open);
     if(closeBtn) closeBtn.addEventListener('click', close);
     if(backdrop) backdrop.addEventListener('click', close);
+    // Auto-close when resizing to desktop
+    const mq = window.matchMedia('(min-width: 601px)');
+    function onChange(){ if(mq.matches){ close(); } }
+    try{ mq.addEventListener('change', onChange); }catch{ window.addEventListener('resize', onChange); }
+    // Force close on first load if desktop
+    if (mq.matches) { close(); }
 })();
 </script>
 <script>

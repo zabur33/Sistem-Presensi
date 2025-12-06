@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Admin - Life Media</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
@@ -15,7 +16,15 @@
         .mobile-drawer .sidebar a{padding:10px 16px}
         .mobile-drawer .sidebar .menu-title{margin-left:16px}
     }
+    @media (min-width: 601px){
+        .mobile-drawer{display:none!important}
+    }
+    /* Safety: drawer should not catch events unless open */
+    .mobile-drawer{pointer-events:none}
+    .mobile-drawer .drawer-panel{pointer-events:auto}
+    .mobile-drawer.open{pointer-events:auto}
     </style>
+    @stack('head')
 </head>
 <body>
 <div class="main-container">
@@ -136,7 +145,13 @@ window.addEventListener('load', startAdminNotif);
     if(openBtn) openBtn.addEventListener('click', open);
     if(closeBtn) closeBtn.addEventListener('click', close);
     if(backdrop) backdrop.addEventListener('click', close);
+    // Auto-close when resizing to desktop and on first load
+    const mq = window.matchMedia('(min-width: 601px)');
+    function onChange(){ if(mq.matches){ close(); } }
+    try{ mq.addEventListener('change', onChange); }catch{ window.addEventListener('resize', onChange); }
+    if (mq.matches) { close(); }
 })();
 </script>
+@stack('scripts')
 </body>
 </html>

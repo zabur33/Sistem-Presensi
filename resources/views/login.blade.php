@@ -10,6 +10,11 @@
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/css/login.css', 'resources/js/app.js'])
     @endif
+    <style>
+        /* Safety: ensure no app drawer/backdrop overlays the login page */
+        .mobile-drawer, .drawer-backdrop { display: none !important; }
+        body { overflow: auto !important; }
+    </style>
 </head>
 <body>
 <div class="container">
@@ -67,6 +72,10 @@
         });
     }
 })();
+</script>
+<script>
+// Ensure body scroll/clicks are enabled if coming from a page that opened the drawer
+try{ document.body.style.overflow = ''; }catch{}
 </script>
 </body>
 </html>

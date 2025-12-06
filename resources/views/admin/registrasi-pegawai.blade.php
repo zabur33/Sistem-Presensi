@@ -97,11 +97,54 @@
 <!-- SweetAlert2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    // Helper: format today as YYYY-MM-DD and set max on birth_date
+    document.addEventListener('DOMContentLoaded', function(){
+        const bd = document.querySelector('input[name="birth_date"]');
+        if(bd){
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth()+1).padStart(2,'0');
+            const dd = String(now.getDate()).padStart(2,'0');
+            bd.max = `${yyyy}-${mm}-${dd}`;
+        }
+    });
+
     // Fungsi untuk menangani submit form
     async function handleFormSubmit(event) {
         event.preventDefault();
         const form = event.target;
         const formData = new FormData(form);
+        const name = (formData.get('name')||'').trim();
+        const email = (formData.get('email')||'').trim();
+        const pwd = (formData.get('password')||'').toString();
+        const pwdc = (formData.get('password_confirmation')||'').toString();
+        const bd = (formData.get('birth_date')||'').toString();
+
+        // Client-side quick checks for better UX
+        const problems = [];
+        if(!name) problems.push('Nama wajib diisi.');
+        if(!email) problems.push('Email wajib diisi.');
+        if(!pwd) problems.push('Password wajib diisi.');
+        if(pwd && pwd.length < 6) problems.push('Password minimal 6 karakter.');
+        if(pwd && pwdc && pwd !== pwdc) problems.push('Konfirmasi password tidak sama.');
+        if(bd){
+            try{
+                const today = new Date(); today.setHours(0,0,0,0);
+                const bdd = new Date(bd); bdd.setHours(0,0,0,0);
+                if(bdd.getTime() > today.getTime()) problems.push('Tanggal lahir tidak boleh melebihi hari ini.');
+            }catch{}
+        }
+
+        if(problems.length){
+            await Swal.fire({
+                title: 'Tidak bisa didaftarkan',
+                html: `<div style="text-align:left">${problems.map(p=>`• ${p}`).join('<br>')}</div>`,
+                icon: 'error',
+                confirmButtonColor: '#b34555',
+                confirmButtonText: 'OK'
+            });
+            return false;
+        }
 
         try {
             const response = await fetch(form.action, {
@@ -117,9 +160,9 @@
             const data = await response.json();
 
             if (response.ok) {
-                // Tampilkan popup sukses
+                // Tampilkan popup sukses (status: bisa didaftarkan)
                 await Swal.fire({
-                    title: 'Berhasil!',
+                    title: 'Pegawai Terdaftar',
                     text: data.message || 'Pegawai berhasil diregistrasi!',
                     icon: 'success',
                     confirmButtonColor: '#b34555',
@@ -153,17 +196,20 @@
                 errorElements.forEach(el => el.remove());
 
             } else {
-                // Tampilkan pesan error validasi
-                let errorMessage = 'Terjadi kesalahan. Silakan coba lagi.';
-                if (data.errors) {
-                    errorMessage = Object.values(data.errors).join('\n');
-                } else if (data.message) {
-                    errorMessage = data.message;
+                // Tampilkan pesan error validasi (status: belum bisa didaftarkan)
+                let items = [];
+                if (data && data.errors) {
+                    // data.errors adalah object: field -> [pesan1, pesan2]
+                    items = Object.values(data.errors).flat();
+                } else if (data && data.message) {
+                    items = [data.message];
+                } else {
+                    items = ['Terjadi kesalahan. Silakan coba lagi.'];
                 }
 
                 await Swal.fire({
-                    title: 'Error!',
-                    text: errorMessage,
+                    title: 'Tidak bisa didaftarkan',
+                    html: `<div style="text-align:left">${items.map(p=>`• ${p}`).join('<br>')}</div>`,
                     icon: 'error',
                     confirmButtonColor: '#b34555',
                     confirmButtonText: 'OK'
