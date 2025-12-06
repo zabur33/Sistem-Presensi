@@ -51,6 +51,9 @@
     <div class="content-area">
         <div class="header">
             <div class="header-left">
+                <button class="mobile-menu-btn" id="uMobileMenuBtn" aria-label="Buka menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
                 <div class="header-logo">
                     <img src="{{ asset('images/logo2.png') }}" alt="Life Media Logo">
                 </div>
@@ -68,6 +71,17 @@
                 <a href="/profile">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a7.5 7.5 0 0 1 13 0"/></svg>
                 </a>
+            </div>
+        </div>
+        <div class="mobile-drawer" id="uMobileDrawer" aria-hidden="true">
+            <div class="drawer-backdrop" id="uDrawerBackdrop"></div>
+            <div class="drawer-panel">
+                <button class="drawer-close" id="uDrawerClose" aria-label="Tutup menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                <div class="sidebar">
+                    @include('user.partials.sidebar')
+                </div>
             </div>
         </div>
         <div class="presensi-content">
@@ -795,6 +809,20 @@ function updateBadge(items){
 
 // start polling on load
 window.addEventListener('load', startNotifPolling);
+</script>
+<script>
+// Mobile Drawer toggle (standalone page)
+(function(){
+    const drawer = document.getElementById('uMobileDrawer');
+    const openBtn = document.getElementById('uMobileMenuBtn');
+    const closeBtn = document.getElementById('uDrawerClose');
+    const backdrop = document.getElementById('uDrawerBackdrop');
+    function open(){ if(drawer){ drawer.classList.add('open'); document.body.style.overflow='hidden'; } }
+    function close(){ if(drawer){ drawer.classList.remove('open'); document.body.style.overflow=''; } }
+    if(openBtn) openBtn.addEventListener('click', open);
+    if(closeBtn) closeBtn.addEventListener('click', close);
+    if(backdrop) backdrop.addEventListener('click', close);
+})();
 </script>
 </body>
 </html>

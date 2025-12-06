@@ -50,6 +50,9 @@
     <div class="content-area">
         <div class="header">
             <div class="header-left">
+                <button class="mobile-menu-btn" id="uMobileMenuBtn" aria-label="Buka menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
                 <div class="header-logo">
                     <img src="{{ asset('images/logo2.png') }}" alt="Life Media Logo">
                 </div>
@@ -68,6 +71,17 @@
                 <a href="/profile">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a7.5 7.5 0 0 1 13 0"/></svg>
                 </a>
+            </div>
+        </div>
+        <div class="mobile-drawer" id="uMobileDrawer" aria-hidden="true">
+            <div class="drawer-backdrop" id="uDrawerBackdrop"></div>
+            <div class="drawer-panel">
+                <button class="drawer-close" id="uDrawerClose" aria-label="Tutup menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                <div class="sidebar">
+                    @include('user.partials.sidebar')
+                </div>
             </div>
         </div>
         <div class="rekap-content">
@@ -215,22 +229,15 @@ let allData = [];
 function togglePresensiDropdown(event) {
     event.preventDefault();
     event.stopPropagation();
-
-    const submenu = document.getElementById('presensi-submenu');
-    const arrow = document.querySelector('.presensi-menu .dropdown-arrow');
-
-    if (submenu && arrow) {
+    const root = event.target.closest('.presensi-menu');
+    if(!root) return false;
+    const submenu = root.querySelector('.submenu');
+    const arrow = root.querySelector('.dropdown-arrow');
+    if (submenu) {
         const isVisible = submenu.classList.contains('show');
-
-        if (isVisible) {
-            submenu.classList.remove('show');
-            arrow.classList.remove('rotated');
-            localStorage.setItem('presensi-dropdown-collapsed', 'true');
-        } else {
-            submenu.classList.add('show');
-            arrow.classList.add('rotated');
-            localStorage.setItem('presensi-dropdown-collapsed', 'false');
-        }
+        submenu.classList.toggle('show', !isVisible);
+        if (arrow) arrow.classList.toggle('rotated', !isVisible);
+        localStorage.setItem('presensi-dropdown-collapsed', isVisible ? 'true' : 'false');
     }
     return false;
 }
@@ -325,6 +332,16 @@ window.addEventListener('load', function() {
 
     // Start polling notifications
     if (typeof startNotifPolling === 'function') startNotifPolling();
+    // Restore presensi submenu state in both sidebar/drawer
+    try{
+        const collapsed = localStorage.getItem('presensi-dropdown-collapsed') === 'true';
+        document.querySelectorAll('.presensi-menu').forEach(root=>{
+            const submenu = root.querySelector('.submenu');
+            const arrow = root.querySelector('.dropdown-arrow');
+            if(submenu){ submenu.classList.toggle('show', !collapsed); }
+            if(arrow){ arrow.classList.toggle('rotated', !collapsed); }
+        });
+    }catch{}
 });
 // ===== Notifikasi Overtime (user) - Global on rekap =====
 let notifTimer=null;
@@ -362,6 +379,20 @@ function updateBadge(items){
     const cnt = (items||[]).filter(it=> new Date(it.updated_at).getTime() > lastSeen).length;
     if(cnt>0){ badge.style.display='inline-block'; badge.textContent=cnt; } else { badge.style.display='none'; }
 }
+</script>
+<script>
+// Mobile Drawer toggle
+(function(){
+    const drawer = document.getElementById('uMobileDrawer');
+    const openBtn = document.getElementById('uMobileMenuBtn');
+    const closeBtn = document.getElementById('uDrawerClose');
+    const backdrop = document.getElementById('uDrawerBackdrop');
+    function open(){ if(drawer){ drawer.classList.add('open'); document.body.style.overflow='hidden'; } }
+    function close(){ if(drawer){ drawer.classList.remove('open'); document.body.style.overflow=''; } }
+    if(openBtn) openBtn.addEventListener('click', open);
+    if(closeBtn) closeBtn.addEventListener('click', close);
+    if(backdrop) backdrop.addEventListener('click', close);
+})();
 </script>
 </body>
 </html>

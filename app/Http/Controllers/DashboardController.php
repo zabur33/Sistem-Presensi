@@ -28,7 +28,7 @@ class DashboardController extends Controller
 
         // Per-month counts by status/location
         $byMonth = $base->clone()
-            ->selectRaw('MONTH(date) as m, 
+            ->selectRaw('MONTH(date) as m,
                 SUM(CASE WHEN time_in IS NOT NULL THEN 1 ELSE 0 END) as hadir,
                 SUM(CASE WHEN location_type = "kantor" THEN 1 ELSE 0 END) as kantor,
                 SUM(CASE WHEN location_type = "luar_kantor" THEN 1 ELSE 0 END) as luar_kantor')
@@ -84,7 +84,38 @@ class DashboardController extends Controller
                 ->first();
         }
 
+        // Compute yearly working entries for stats (total recorded days in selected year)
+        $totalWorkDays = (int) $base->clone()->count();
+
+        // Build monthly_data array matching frontend expectation
+        $monthlyData = [];
+        foreach ($months as $m) {
+            $monthlyData[] = [
+                'month' => $m,
+                // Map to dashboard frontend keys
+                'dinas' => (int) ($series['kantor'][$m] ?? 0),
+                'present' => (int) ($series['hadir'][$m] ?? 0),
+                'wfh' => (int) ($series['luar_kantor'][$m] ?? 0),
+            ];
+        }
+
+        // Mode summary for pie (current month)
+        $modeSummary = [
+            'dinas' => $kantorDays,
+            'wfh' => $luarDays,
+            'hadir' => $presentDays,
+        ];
+
+        // Map today's status for frontend button visibility
+        $todayStatus = $todayRow ? [
+            'location' => $todayRow->location_text ?: $todayRow->location_type,
+            'time_in' => $todayRow->time_in ? Carbon::parse($todayRow->time_in, $tz)->format('H:i') : null,
+            'time_out' => $todayRow->time_out ? Carbon::parse($todayRow->time_out, $tz)->format('H:i') : null,
+            'can_checkout' => $todayRow->time_in && !$todayRow->time_out,
+        ] : null;
+
         return response()->json([
+            // Keep current shape (for potential other consumers)
             'year' => $year,
             'months' => $months,
             'series' => [
@@ -98,13 +129,17 @@ class DashboardController extends Controller
                 'luar_kantor_days' => $luarDays,
                 'late_count' => $lateCount,
             ],
-            'today' => $todayRow ? [
-                'date' => (string) $todayRow->date,
-                'time_in' => $todayRow->time_in ? Carbon::parse($todayRow->time_in, $tz)->format('H:i') : null,
-                'time_out' => $todayRow->time_out ? Carbon::parse($todayRow->time_out, $tz)->format('H:i') : null,
-                'location_type' => $todayRow->location_type,
-                'location_text' => $todayRow->location_text,
-            ] : null,
+
+            // Fields expected by dashboard frontend
+            'stats' => [
+                'total_work_days' => $totalWorkDays,
+                'days_present' => $presentDays,
+                'remote_days' => $luarDays,
+                'late_days' => $lateCount,
+            ],
+            'monthly_data' => $monthlyData,
+            'mode_summary' => $modeSummary,
+            'today_status' => $todayStatus,
         ]);
     }
 }
