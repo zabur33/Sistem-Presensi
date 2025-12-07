@@ -122,11 +122,19 @@ body {
 .header .header-icons {
     display: flex;
     align-items: center;
+    gap: 12px;
+}
+.header .header-icons a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
 }
 .header .header-icons svg {
-    width: 32px;
-    height: 32px;
-    margin-left: 18px;
+    width: 24px;
+    height: 24px;
+    margin-left: 0;
     cursor: pointer;
 }
 /* Mobile hamburger button */
@@ -533,6 +541,11 @@ b.stat-item {
     }
     .content-area {
         padding: 0;
+    }
+    /* Geser hamburger lebih ke kiri di header saat mobile/tablet */
+    .header {
+        padding-left: 12px;
+        padding-right: 16px;
     }
     .dashboard-content {
         padding: 20px 16px;

@@ -37,9 +37,9 @@
                 <button class="mobile-menu-btn" id="aMobileMenuBtn" aria-label="Buka menu">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
                 </button>
-                <div class="header-logo">
+                <a href="/admin" class="header-logo" aria-label="Kembali ke Dashboard Admin">
                     <img src="{{ asset('images/logo2.png') }}" alt="Life Media Logo">
-                </div>
+                </a>
             </div>
             <div class="header-icons" style="margin-left:auto; display:flex; align-items:center; gap:12px;">
                 <div id="adminNotifWrapper" style="position:relative;display:inline-block;">

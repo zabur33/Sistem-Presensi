@@ -155,7 +155,7 @@
 
 .presensi-btn:disabled {
     background: #ccc;
-    cursor: not-allowed;
+    cursor: pointer;
     transform: none;
 }
 
@@ -202,7 +202,7 @@
     padding: 12px 16px;
     border: 2px solid #e9ecef;
     border-radius: 8px;
-    font-family: 'Inter', sans-serif;
+    font-family: "Inter", sans-serif;
     font-size: 1rem;
     resize: vertical;
     background: #fff;
@@ -316,20 +316,20 @@
     .presensi-content {
         padding: 20px 16px;
     }
-    
+
     .attendance-grid {
         grid-template-columns: 1fr;
         gap: 16px;
     }
-    
+
     .problem-input {
         flex-direction: column;
     }
-    
+
     .report-btn {
         align-self: flex-end;
     }
-    
+
     .modal-content {
         padding: 24px;
         margin: 16px;
@@ -340,11 +340,11 @@
     .time-display {
         font-size: 2rem;
     }
-    
+
     .page-title h1 {
         font-size: 1.5rem;
     }
-    
+
     .attendance-card {
         padding: 20px;
     }

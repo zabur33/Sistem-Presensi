@@ -1,6 +1,8 @@
 <div>
     <div class="logo">
-        <img src="{{ asset('images/logo2.png') }}" alt="Life Media Logo">
+        <a href="/dashboard" aria-label="Kembali ke Dashboard">
+            <img src="{{ asset('images/logo2.png') }}" alt="Life Media Logo">
+        </a>
     </div>
     <div class="menu">
         <div class="menu-title">MAIN MENU</div>
@@ -14,7 +16,7 @@
             <li class="presensi-menu">
                 <a href="javascript:void(0)" onclick="togglePresensiDropdown(event)" style="justify-content:space-between;display:flex;align-items:center;"
                    class="{{ request()->is('presensi*') ? 'active' : '' }}">
-                    <span style="display:flex;align-items:center;gap:12px;">
+                    <span style="display:flex;align-items:center;gap:0;">
                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                         Presensi
                     </span>

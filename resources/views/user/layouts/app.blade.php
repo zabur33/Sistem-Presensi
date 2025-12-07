@@ -44,7 +44,7 @@
                     <img src="{{ asset('images/logo2.png') }}" alt="Life Media Logo">
                 </a>
             </div>
-            <div class="header-icons" style="margin-left:auto; display:flex; align-items:center; gap:0;">
+            <div class="header-icons" style="margin-left:auto; display:flex; align-items:center; gap:12px;">
                 <div id="notifWrapper" style="position:relative;display:inline-block;">
                     <a href="#" id="notifBell" onclick="toggleNotifDropdown(event)" title="Notifikasi" aria-label="Notifikasi"
                        style="display:inline-flex; align-items:center; justify-content:center; color:#ffffff;">
