@@ -30,8 +30,8 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// User pages (protected)
-Route::middleware('auth')->group(function () {
+// User pages (protected + idle timeout)
+Route::middleware(['auth','idle'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     });
@@ -89,7 +89,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Admin routes (tampilan sama, halaman berbeda)
-Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
+Route::prefix('admin')->middleware(['auth', 'idle', 'admin'])->group(function () {
     Route::get('/', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');
