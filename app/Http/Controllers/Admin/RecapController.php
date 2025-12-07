@@ -15,33 +15,58 @@ class RecapController extends Controller
     {
         $lateThreshold = '08:00:00';
 
-        $query = Attendance::query()
+        $attendanceQuery = Attendance::query()
             ->select([
                 'attendances.user_id',
                 DB::raw("SUM(CASE WHEN status='Hadir' THEN 1 ELSE 0 END) as hadir"),
                 DB::raw("SUM(CASE WHEN status='Tanpa Keterangan' THEN 1 ELSE 0 END) as tanpa_keterangan"),
                 DB::raw("SUM(CASE WHEN status='Hadir' AND time_in > '".$lateThreshold."' THEN 1 ELSE 0 END) as terlambat"),
-                DB::raw('0 as lembur'),
             ])
             ->whereYear('date', $year)
             ->whereMonth('date', $month)
             ->when(in_array($location, ['kantor','luar_kantor'], true), function ($q) use ($location) {
                 $q->where('location_type', $location);
             })
-            ->when(in_array($status, ['Hadir','Tanpa Keterangan'], true), function ($q) use ($status) {
-                $q->where('status', $status);
-            })
             ->groupBy('attendances.user_id');
 
-        return DB::table(DB::raw("({$query->toSql()}) as recaps"))
-            ->mergeBindings($query->getQuery())
+        $overtimeQuery = DB::table('overtime_requests')
+            ->select([
+                'overtime_requests.user_id',
+                DB::raw('COUNT(*) as lembur'),
+            ])
+            ->whereYear('date', $year)
+            ->whereMonth('date', $month)
+            ->where('status', 'approved')
+            ->groupBy('overtime_requests.user_id');
+
+        $query = DB::query()
+            ->fromSub($attendanceQuery, 'recaps')
+            ->leftJoinSub($overtimeQuery, 'ot_counts', 'recaps.user_id', '=', 'ot_counts.user_id')
             ->join('employees', 'employees.user_id', '=', 'recaps.user_id')
             ->join('users', 'users.id', '=', 'recaps.user_id')
             ->select([
                 'users.name', 'users.email',
                 'employees.nip', 'employees.position', 'employees.division',
-                'recaps.hadir', 'recaps.tanpa_keterangan', 'recaps.terlambat', 'recaps.lembur',
+                'recaps.hadir', 'recaps.tanpa_keterangan', 'recaps.terlambat',
+                DB::raw('COALESCE(ot_counts.lembur, 0) as lembur'),
             ]);
+
+        return $query->when($status, function ($q) use ($status) {
+            switch ($status) {
+                case 'Hadir':
+                    $q->where('recaps.hadir', '>', 0);
+                    break;
+                case 'Terlambat':
+                    $q->where('recaps.terlambat', '>', 0);
+                    break;
+                case 'Tanpa Keterangan':
+                    $q->where('recaps.tanpa_keterangan', '>', 0);
+                    break;
+                case 'Lembur':
+                    $q->where('ot_counts.lembur', '>', 0);
+                    break;
+            }
+        });
     }
 
     public function index(Request $request)
@@ -49,7 +74,7 @@ class RecapController extends Controller
         $year = (int)($request->query('year') ?: now()->year);
         $month = (int)($request->query('month') ?: now()->month);
         $location = $request->query('location'); // kantor | luar_kantor | null
-        $status = $request->query('status'); // Hadir | Tanpa Keterangan | null
+        $status = $request->query('status'); // Hadir | Terlambat | Tanpa Keterangan | Lembur | null
 
         $rows = $this->baseRecapQuery($year, $month, $location, $status)
             ->orderBy('users.name')
