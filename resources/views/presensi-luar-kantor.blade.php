@@ -91,8 +91,8 @@
         </div>
         <div class="presensi-content">
             <div class="page-title">
-                <h1>Presensi</h1>
-                <p>Presensi Luar Kantor</p>
+                <h1>Presensi Luar Kantor</h1>
+                <p>WARNING!! Sebelum melakukan Presensi diwajibkan untuk mengambil foto dan mengisi keterangan terlebih dahulu!!</p>
             </div>
 
             <div class="attendance-grid">
@@ -1026,7 +1026,7 @@ function getCurrentLocation() {
     } else {
         const errorMessage = 'Geolocation tidak didukung browser';
         locationText.textContent = errorMessage;
-        locationInput.value = errorMessage;
+        locationInput.value = errorMessage; 
     }
 }
 
