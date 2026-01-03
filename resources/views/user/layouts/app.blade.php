@@ -26,6 +26,8 @@
     /* Force-hide drawer and backdrop unless open */
     .mobile-drawer:not(.open){display:none!important}
     .mobile-drawer:not(.open) .drawer-backdrop{display:none!important}
+    /* Footer styling */
+    .footer{margin:20px 0 4px;padding:12px 0;text-align:center;color:#9ca3af;font-size:12px}
     </style>
     @stack('head')
 </head>

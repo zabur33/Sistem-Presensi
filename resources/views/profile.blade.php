@@ -65,12 +65,12 @@
                 </a>
             </div>
         </div>
-        <div class="profile-content">
-            <div class="page-title">
-                <h1>Profile</h1>
-            </div>
+<div class="profile-content">
+    <div class="page-title">
+        <h1>Profile</h1>
+    </div>
 
-            <div class="profile-container">
+    <div class="profile-container">
                 <!-- User Information Form -->
                 <div class="profile-form-section">
                     <div class="section-header">
@@ -160,9 +160,10 @@
                     </div>
                 </div>
             </div>
-        </div>
     </div>
-</div>
+    </div>
+    </div>
+    
 
 <!-- Success Modal -->
 <div id="successModal" class="modal">
@@ -289,23 +290,59 @@ function toggleEdit() {
 }
 
 // Save profile
-function saveProfile() {
+async function saveProfile() {
     const name = document.getElementById('name').value;
     const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
     if (!name || !email) {
         alert('Please fill in all required fields');
         return;
     }
 
-    // Update profile display
-    document.getElementById('profileName').textContent = name;
-    
-    // Toggle back to view mode
-    toggleEdit();
-    
-    // Show success modal
-    document.getElementById('successModal').style.display = 'flex';
+    try {
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('email', email);
+        
+        if (password) {
+            formData.append('password', password);
+            formData.append('password_confirmation', password);
+        }
+
+        // Add file if selected
+        const fileInput = document.getElementById('profileImageInput');
+        if (fileInput.files[0]) {
+            formData.append('avatar', fileInput.files[0]);
+        }
+
+        const response = await fetch('{{ route("profile.update") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Update profile display
+            document.getElementById('profileName').textContent = name;
+            
+            // Toggle back to view mode
+            toggleEdit();
+            
+            // Show success modal
+            document.getElementById('successModal').style.display = 'flex';
+        } else {
+            alert(result.message || 'Error updating profile');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error updating profile. Please try again.');
+    }
 }
 
 // Profile image upload

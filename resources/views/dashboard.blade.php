@@ -48,7 +48,7 @@
         </div>
     </div>
 
-    <div class="footer">© {{ date('Y') }} Life Media. All rights reserved.</div>
+    <div class="footer">© {{ date('Y') }} Tim 3 - Life Media. All rights reserved.</div>
 </div>
 
 <script>

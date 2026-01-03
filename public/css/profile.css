@@ -6,6 +6,9 @@
     background: #fafbfc;
 }
 
+/* Footer styling */
+.footer{margin:20px 0 4px;padding:12px 0;text-align:center;color:#9ca3af;font-size:12px}
+
 .page-title {
     margin-bottom: 32px;
 }
@@ -231,23 +234,26 @@
     margin-bottom: 8px;
 }
 
+.profile-info {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center;
+}
+
 .profile-info h3 {
     font-size: 1.5rem;
     font-weight: 700;
     color: #222;
     margin: 0 0 8px 0;
+    display: block;
 }
 
-.profile-info p {
+.profile-info .role {
     font-size: 1rem;
     color: #666;
     margin: 0;
-}
-
-/* Ensure role appears beneath the name */
-.profile-info h3 + .role,
-.profile-info .role {
-    display: block !important;
+    display: block;
     margin-top: 4px;
 }
 

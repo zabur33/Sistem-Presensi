@@ -1,5 +1,9 @@
 @extends('admin.layouts.app')
 
+@section('footer')
+<!-- Footer disabled, using inline copyright -->
+@endsection
+
 @section('content')
 <style>
   :root { --card-bg:#ffffff; --border:#e5e7eb; --text:#111827; --muted:#6b7280; --shadow:0 2px 8px rgba(0,0,0,0.08); --radius:12px; }
@@ -38,6 +42,9 @@
     .stat-card h4 { font-size:12px; }
     .stat-card .value { font-size:20px; }
   }
+  
+  /* Footer styling */
+  .footer{margin:20px 0 4px;padding:12px 0;text-align:center;color:#9ca3af;font-size:12px}
 </style>
 
 <div class="admin-dashboard">
@@ -69,6 +76,8 @@
       <div class="pie-area"><canvas id="pieChart"></canvas></div>
     </div>
   </div>
+  
+  <div class="footer">© {{ date('Y') }} Tim 3 - Life Media. All rights reserved.</div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>

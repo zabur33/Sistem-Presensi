@@ -70,12 +70,12 @@
                 </a>
             </div>
         </div>
-        <div class="profile-content">
-            <div class="page-title">
-                <h1>Edit Profile</h1>
-            </div>
+<div class="profile-content">
+    <div class="page-title">
+        <h1>Edit Profile</h1>
+    </div>
 
-            <div class="profile-container">
+    <div class="profile-container">
                 <!-- User Information Form -->
                 <div class="profile-form-section">
                     <div class="section-header">
@@ -153,7 +153,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+    </div>
     </div>
 </div>
 

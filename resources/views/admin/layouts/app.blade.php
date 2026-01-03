@@ -23,6 +23,8 @@
     .mobile-drawer{pointer-events:none}
     .mobile-drawer .drawer-panel{pointer-events:auto}
     .mobile-drawer.open{pointer-events:auto}
+    /* Footer styling */
+    .footer{margin:20px 0 4px;padding:12px 0;text-align:center;color:#9ca3af;font-size:12px}
     </style>
     @stack('head')
 </head>
@@ -153,5 +155,6 @@ window.addEventListener('load', startAdminNotif);
 })();
 </script>
 @stack('scripts')
+@yield('footer')
 </body>
 </html>

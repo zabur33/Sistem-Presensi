@@ -14,6 +14,8 @@
         /* Safety: ensure no app drawer/backdrop overlays the login page */
         .mobile-drawer, .drawer-backdrop { display: none !important; }
         body { overflow: auto !important; }
+        /* Footer styling */
+        .footer{margin:20px 0 4px;padding:12px 0;text-align:center;color:#9ca3af;font-size:12px}
     </style>
 </head>
 <body>
@@ -52,6 +54,7 @@
                 </div>
             @endif
             <button class="login-btn" type="submit">LOGIN</button>
+            <div class="footer">© {{ date('Y') }} Tim 3 - Life Media. All rights reserved.</div>
         </form>
     </div>
 </div>
