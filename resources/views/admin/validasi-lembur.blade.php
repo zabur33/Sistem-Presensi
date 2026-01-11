@@ -2,8 +2,8 @@
 
 @section('content')
 <div class="page-title" style="margin-bottom:18px;">
-    <h1 style="font-weight:800; font-size:28px;">Notifikasi Lembur</h1>
-    <p style="color:#7a7a7a; margin-top:6px;">Pantau dan kelola pengajuan lembur dari pegawai.</p>
+    <h1 style="font-weight:800; font-size:28px;">Validasi Lembur</h1>
+    <p style="color:#7a7a7a; margin-top:6px;">Pantau dan kelola pengajuan lembur dari pegawai</p>
 </div>
 
 <!-- Tabs + Search + Actions -->
@@ -66,7 +66,7 @@
 
 <!-- List -->
 <div class="ot-card">
-    <div style="padding:10px 12px;font-weight:800;color:#5b4e48;border-bottom:1px solid #e3d6cf;">Notifikasi</div>
+    <div style="padding:10px 12px;font-weight:800;color:#5b4e48;border-bottom:1px solid #e3d6cf;">Validasi Lembur</div>
     @forelse(($items ?? []) as $it)
         <div class="ot-item">
             <div class="user-ava">{{ strtoupper(substr(optional($it->user)->name ?? 'U',0,1)) }}</div>

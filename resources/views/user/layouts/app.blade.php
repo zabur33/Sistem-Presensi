@@ -93,6 +93,14 @@ function startNotifPolling(){
     notifTimer = setInterval(fetchAndRenderNotif, 30000);
 }
 function toggleNotifDropdown(e){ e.preventDefault(); e.stopPropagation(); const dd=document.getElementById('notifDropdown'); if(!dd) return; const is=dd.style.display==='block'; dd.style.display=is?'none':'block'; if(!is){ localStorage.setItem('overtime_last_seen', new Date().toISOString()); updateBadge([]); } }
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const wrapper = document.getElementById('notifWrapper');
+    const dropdown = document.getElementById('notifDropdown');
+    if (wrapper && dropdown && !wrapper.contains(event.target)) {
+        dropdown.style.display = 'none';
+    }
+});
 function fetchAndRenderNotif(){
     fetch("{{ route('user.overtime.notifications') }}", { headers:{'Accept':'application/json'} })
         .then(r=>r.json()).then(items=>{ renderNotif(items); updateBadge(items); }).catch(()=>{});

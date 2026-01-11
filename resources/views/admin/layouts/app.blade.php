@@ -85,8 +85,9 @@
 <script>
 // ==== Admin Complaint Notifications ====
 let adminNotifTimer = null;
-function toggleAdminNotifDropdown(e){
-    e.preventDefault();
+function toggleAdminNotifDropdown(event){
+    event.preventDefault();
+    event.stopPropagation();
     const dd = document.getElementById('adminNotifDropdown');
     if(!dd) return;
     const is = dd.style.display === 'block';
@@ -96,6 +97,14 @@ function toggleAdminNotifDropdown(e){
         updateAdminBadge([]);
     }
 }
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const wrapper = document.getElementById('adminNotifWrapper');
+    const dropdown = document.getElementById('adminNotifDropdown');
+    if (wrapper && dropdown && !wrapper.contains(event.target)) {
+        dropdown.style.display = 'none';
+    }
+});
 function fetchAdminComplaints(){
     return fetch("{{ route('admin.complaints.notifications') }}", { headers:{'Accept':'application/json'} })
         .then(r=> r.ok ? r.json() : []).catch(()=>[]);
