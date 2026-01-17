@@ -1292,7 +1292,20 @@ function startNotifPolling(){
     if (notifTimer) clearInterval(notifTimer);
     notifTimer = setInterval(fetchAndRenderNotif, 30000);
 }
-function toggleNotifDropdown(e){ e.preventDefault(); const dd=document.getElementById('notifDropdown'); if(!dd) return; const is=dd.style.display==='block'; dd.style.display=is?'none':'block'; if(!is){ localStorage.setItem('overtime_last_seen', new Date().toISOString()); updateBadge([]); } }
+function toggleNotifDropdown(e){
+    if(e){
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    const dd=document.getElementById('notifDropdown');
+    if(!dd) return;
+    const is=dd.style.display==='block';
+    dd.style.display=is?'none':'block';
+    if(!is){
+        try{ localStorage.setItem('overtime_last_seen', new Date().toISOString()); }catch{}
+        updateBadge([]);
+    }
+}
 function fetchAndRenderNotif(){
     fetch("{{ route('user.overtime.notifications') }}", { headers:{'Accept':'application/json'} })
         .then(r=>r.json()).then(items=>{ renderNotif(items); updateBadge(items); }).catch(()=>{});

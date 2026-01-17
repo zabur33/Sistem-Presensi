@@ -16,9 +16,7 @@
         .mobile-drawer .sidebar a{padding:10px 16px}
         .mobile-drawer .sidebar .menu-title{margin-left:16px}
     }
-    @media (min-width: 601px){
-        .mobile-drawer{display:none!important}
-    }
+    /* Drawer stays available up to tablet widths; JS auto-closes on desktop */
     /* Safety: drawer should not catch events unless open */
     .mobile-drawer{pointer-events:none}
     .mobile-drawer .drawer-panel{pointer-events:auto}
@@ -138,8 +136,18 @@ window.addEventListener('load', startNotifPolling);
     const openBtn = document.getElementById('uMobileMenuBtn');
     const closeBtn = document.getElementById('uDrawerClose');
     const backdrop = document.getElementById('uDrawerBackdrop');
-    function open(){ if(drawer){ drawer.classList.add('open'); document.body.style.overflow='hidden'; } }
-    function close(){ if(drawer){ drawer.classList.remove('open'); document.body.style.overflow=''; } }
+    function open(){
+        if(!drawer) return;
+        drawer.classList.add('open');
+        drawer.style.display = 'block';
+        document.body.style.overflow='hidden';
+    }
+    function close(){
+        if(!drawer) return;
+        drawer.classList.remove('open');
+        drawer.style.display = '';
+        document.body.style.overflow='';
+    }
     if(openBtn) openBtn.addEventListener('click', open);
     if(closeBtn) closeBtn.addEventListener('click', close);
     if(backdrop) backdrop.addEventListener('click', close);
