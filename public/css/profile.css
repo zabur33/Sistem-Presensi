@@ -6,6 +6,135 @@
     background: #fafbfc;
 }
 
+/* Mobile Menu Button */
+.mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    color: #ffffff;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.mobile-menu-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-menu-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Mobile Drawer */
+.mobile-drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.3s, opacity 0.3s;
+}
+
+.mobile-drawer.open {
+    visibility: visible;
+    opacity: 1;
+}
+
+.drawer-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.mobile-drawer.open .drawer-backdrop {
+    opacity: 1;
+}
+
+.drawer-panel {
+    position: absolute;
+    top: 0;
+    left: -280px;
+    width: 280px;
+    height: 100%;
+    background: white;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+    transition: left 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.mobile-drawer.open .drawer-panel {
+    left: 0;
+}
+
+.drawer-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    color: #6b7280;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.drawer-close:hover {
+    background-color: #f3f4f6;
+}
+
+.drawer-close svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Sidebar in mobile drawer */
+.mobile-drawer .sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0;
+}
+
+.mobile-drawer .sidebar .logo {
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    text-decoration: none;
+    display: flex;
+    justify-content: center;
+    transition: opacity 0.2s;
+}
+
+.mobile-drawer .sidebar .logo:hover {
+    opacity: 0.8;
+}
+
+.mobile-drawer .sidebar .logo img {
+    height: 40px;
+    width: auto;
+}
+
+.mobile-drawer .sidebar .menu {
+    flex: 1;
+    padding: 16px;
+}
+
+.mobile-drawer .sidebar .logout {
+    padding: 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
 /* Footer styling */
 .footer{margin:20px 0 4px;padding:12px 0;text-align:center;color:#9ca3af;font-size:12px}
 
@@ -39,6 +168,37 @@
     grid-template-columns: 1fr 350px;
     gap: 32px;
     max-width: 1200px;
+}
+
+/* Desktop order: User Information left, Profile Picture right */
+@media (min-width: 769px) {
+    .profile-form-section {
+        order: 1; /* User Information left */
+    }
+    
+    .profile-picture-section {
+        order: 2; /* Profile Picture right */
+    }
+    
+    /* Keep desktop layout vertical */
+    .profile-picture-section .profile-picture-container {
+        display: block; /* Override mobile flex */
+        text-align: center;
+    }
+    
+    .profile-picture-section .profile-info {
+        text-align: center; /* Override mobile left align */
+        margin-top: 16px;
+    }
+    
+    .profile-picture-section .profile-info h3 {
+        font-size: 1.3rem; /* Desktop size */
+        margin-bottom: 8px;
+    }
+    
+    .profile-picture-section .profile-info .role {
+        font-size: 1rem; /* Desktop size */
+    }
 }
 
 /* Profile Form Section */
@@ -164,31 +324,35 @@
 }
 
 /* Profile Picture Section */
+
 .profile-picture-section {
     background: #fff;
     border-radius: 16px;
-    padding: 32px;
+    padding: 24px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     border: 1px solid #f0f0f0;
     height: fit-content;
+    width: 100%;
 }
 
 .profile-picture-container {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    text-align: center;
+    gap: 16px;
+    text-align: left;
+    width: 100%;
 }
 
 .profile-picture {
     position: relative;
-    width: 150px;
-    height: 150px;
-    margin-bottom: 24px;
+    width: 90px;
+    height: 90px;
     border-radius: 50%;
     overflow: hidden;
     border: 4px solid #f0f0f0;
     transition: all 0.2s;
+    flex-shrink: 0;
 }
 
 .profile-picture.editable {
@@ -235,26 +399,26 @@
 }
 
 .profile-info {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
 }
 
 .profile-info h3 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: 700;
     color: #222;
-    margin: 0 0 8px 0;
+    margin: 0 0 4px 0;
     display: block;
 }
 
 .profile-info .role {
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: #666;
     margin: 0;
     display: block;
-    margin-top: 4px;
 }
 
 /* Header Icons Link */
@@ -475,6 +639,168 @@
     }
     
     .profile-info h3 {
+        font-size: 1.3rem;
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    /* Show hamburger button */
+    .mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Hide desktop sidebar */
+    .sidebar {
+        display: none;
+    }
+    
+    /* Adjust profile content for mobile */
+    .profile-content {
+        padding: 20px 16px;
+    }
+    
+    .profile-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    /* Reorder for mobile: Profile Picture first, then User Information */
+    .profile-container {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .profile-picture-section {
+        order: 1; /* Profile Picture first */
+        padding: 16px;
+        max-width: 100%; /* Full width for horizontal layout */
+        margin: 0 auto;
+    }
+    
+    /* Horizontal layout for mobile: photo beside info */
+    .profile-picture-section .profile-picture-container {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        text-align: left;
+    }
+    
+    /* Smaller profile picture for mobile */
+    .profile-picture-section .profile-picture {
+        width: 80px;
+        height: 80px;
+        flex-shrink: 0; /* Prevent shrinking */
+    }
+    
+    /* Profile info beside photo */
+    .profile-picture-section .profile-info {
+        flex: 1; /* Take remaining space */
+        text-align: left;
+    }
+    
+    .profile-picture-section .profile-info h3 {
+        font-size: 1.2rem;
+        margin-bottom: 4px;
+        color: #111827;
+    }
+    
+    .profile-picture-section .profile-info .role {
+        font-size: 0.9rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    
+    .profile-form-section {
+        order: 2; /* User Information second */
+        padding: 20px;
+    }
+    
+    .page-title h1 {
+        font-size: 1.5rem;
+    }
+    
+    /* Header adjustments */
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .header-logo {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        transition: opacity 0.2s;
+    }
+    
+    .header-logo:hover {
+        opacity: 0.8;
+    }
+    
+    .header-logo img {
+        height: 32px;
+        width: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-content {
+        padding: 16px 12px;
+    }
+    
+    .profile-picture-section {
+        padding: 12px;
+        order: 1; /* Profile Picture first */
+        max-width: 100%; /* Full width for horizontal layout */
+        margin: 0 auto;
+    }
+    
+    /* Horizontal layout for small mobile: photo beside info */
+    .profile-picture-section .profile-picture-container {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-align: left;
+    }
+    
+    /* Even smaller profile picture for small mobile */
+    .profile-picture-section .profile-picture {
+        width: 60px;
+        height: 60px;
+        flex-shrink: 0;
+    }
+    
+    /* Profile info beside photo */
+    .profile-picture-section .profile-info {
+        flex: 1;
+        text-align: left;
+    }
+    
+    .profile-picture-section .profile-info h3 {
+        font-size: 1.1rem;
+        margin-bottom: 2px;
+        color: #111827;
+    }
+    
+    .profile-picture-section .profile-info .role {
+        font-size: 0.8rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    
+    .profile-form-section {
+        padding: 16px;
+        order: 2; /* User Information second */
+    }
+    
+    .page-title {
+        margin-bottom: 24px;
+    }
+    
+    .page-title h1 {
         font-size: 1.3rem;
     }
 }

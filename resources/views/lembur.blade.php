@@ -94,7 +94,39 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
                 <div class="sidebar">
-                    @include('user.partials.sidebar')
+                    <div>
+                        <div class="logo">
+                            <img src="{{ asset('images/logo2.png') }}" alt="Life Media Logo">
+                        </div>
+                        <div class="menu">
+                            <div class="menu-title">MAIN MENU</div>
+                            <ul>
+                                <li><a href="/dashboard"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>Dashboard</a></li>
+                                <li class="presensi-menu">
+                                    <a href="javascript:void(0)" onclick="togglePresensiDropdown(event)">
+                                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                                        Presensi
+                                        <svg class="dropdown-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
+                                    </a>
+                                    <ul class="submenu" id="presensi-submenu-drawer">
+                                        <li><a href="/presensi/kantor">Kantor</a></li>
+                                        <li><a href="/presensi/luar-kantor">Luar Kantor</a></li>
+                                    </ul>
+                                </li>
+                                <li><a href="/lembur" class="active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Lembur</a></li>
+                                <li><a href="/rekap-keseluruhan"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Rekap Keseluruhan</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="logout">
+                        <form method="POST" action="{{ route('logout') }}" style="display:flex;align-items:center;gap:8px;">
+                            @csrf
+                            <button type="submit" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:inherit;cursor:pointer;">
+                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
+                                Logout
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -102,7 +134,6 @@
             <div class="page-title">
                 <h1>Lembur</h1>
             </div>
-
             <div class="lembur-form">
                 <form id="lemburForm">
                     <!-- Nama dan Alamat Row -->
@@ -227,27 +258,30 @@
 </div>
 
 <script>
-// Dropdown functionality
+// Dropdown functionality that works for desktop + drawer
 function togglePresensiDropdown(event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const submenu = document.getElementById('presensi-submenu');
-    const arrow = document.querySelector('.presensi-menu .dropdown-arrow');
-
-    if (submenu && arrow) {
-        const isVisible = submenu.classList.contains('show');
-
-        if (isVisible) {
-            submenu.classList.remove('show');
-            arrow.classList.remove('rotated');
-            localStorage.setItem('presensi-dropdown-collapsed', 'true');
-        } else {
-            submenu.classList.add('show');
-            arrow.classList.add('rotated');
-            localStorage.setItem('presensi-dropdown-collapsed', 'false');
-        }
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
     }
+
+    const trigger = event ? (event.currentTarget || event.target) : null;
+    const rootMenu = trigger ? trigger.closest('.presensi-menu') : document.querySelector('.presensi-menu');
+    if (!rootMenu) return false;
+
+    const submenu = rootMenu.querySelector('.submenu');
+    const arrow = rootMenu.querySelector('.dropdown-arrow');
+    if (!submenu) return false;
+
+    const isVisible = submenu.classList.contains('show');
+    submenu.classList.toggle('show', !isVisible);
+    if (arrow) arrow.classList.toggle('rotated', !isVisible);
+
+    try {
+        const storageKey = rootMenu.closest('.mobile-drawer') ? 'presensi-dropdown-collapsed-mobile' : 'presensi-dropdown-collapsed';
+        localStorage.setItem(storageKey, (!isVisible).toString());
+    } catch (e) {}
+
     return false;
 }
 
@@ -269,15 +303,14 @@ function getLocationWithTimeout(timeout = 7000){
 
 // Close dropdown when clicking outside
 document.addEventListener('click', function(event) {
-    if (!event.target.closest('.presensi-menu')) {
-        const submenu = document.querySelector('.presensi-menu .submenu');
-        const arrow = document.querySelector('.presensi-menu .dropdown-arrow');
-        if (submenu && submenu.classList.contains('show')) {
-            submenu.classList.remove('show');
-            localStorage.setItem('presensi-dropdown-collapsed', 'true');
+    document.querySelectorAll('.presensi-menu').forEach(menu => {
+        if (!menu.contains(event.target)) {
+            const submenu = menu.querySelector('.submenu');
+            const arrow = menu.querySelector('.dropdown-arrow');
+            if (submenu) submenu.classList.remove('show');
+            if (arrow) arrow.classList.remove('rotated');
         }
-        if (arrow) arrow.classList.remove('rotated');
-    }
+    });
 });
 
 // Camera logic (dual: face & support)

@@ -11,6 +11,31 @@ use Carbon\Carbon;
 class AttendanceSyncController extends Controller
 {
     /**
+     * Generate device ID from request headers and user agent
+     */
+    private function getDeviceFingerprint(Request $request): string
+    {
+        $userAgent = $request->header('User-Agent', '');
+        $ip = $request->ip();
+        
+        // Create a unique device ID based on user agent and IP hash
+        return substr(md5($userAgent . $ip . $request->user()->id), 0, 20);
+    }
+    
+    /**
+     * Generate more detailed device fingerprint
+     */
+    private function generateDeviceFingerprint(Request $request): string
+    {
+        $userAgent = $request->header('User-Agent', '');
+        $ip = $request->ip();
+        $acceptLanguage = $request->header('Accept-Language', '');
+        $accept = $request->header('Accept', '');
+        
+        return md5($userAgent . $ip . $acceptLanguage . $accept . date('Y-m-d'));
+    }
+
+    /**
      * Build a Carbon datetime based on today's date in the given timezone
      * and the provided client_time (HH:MM:SS). Fallback to now($tz).
      */
@@ -36,23 +61,54 @@ class AttendanceSyncController extends Controller
     {
         $user = Auth::user();
         if (!$user) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
+
+        // Get device fingerprint
+        $deviceId = $this->getDeviceFingerprint($request);
+        $deviceFingerprint = $this->generateDeviceFingerprint($request);
 
         $request->validate([
             'location_type' => 'required|in:kantor,luar_kantor',
             'client_time' => 'nullable|string', // expected format HH:MM:SS
         ]);
+
         $tz = config('app.timezone') ?: 'UTC';
         $today = now($tz)->toDateString();
         $location = $request->input('location_type');
 
-        // Find or create today's attendance for this user
+        // Check if user already has active attendance from another device today
+        $existingAttendance = Attendance::where('user_id', $user->id)
+            ->where('date', $today)
+            ->where('time_in', '!=', null)
+            ->where('time_out', null)
+            ->where(function($query) use ($deviceId, $deviceFingerprint) {
+                $query->where('device_id', '!=', $deviceId)
+                      ->orWhere('device_fingerprint', '!=', $deviceFingerprint);
+            })
+            ->first();
+
+        if ($existingAttendance) {
+            return response()->json([
+                'error' => 'Anda sudah melakukan check-in dari device lain. Silakan check-out terlebih dahulu.',
+                'existing_device' => $existingAttendance->device_id,
+                'existing_time' => $existingAttendance->time_in,
+                'conflict' => true
+            ], 409); // 409 Conflict
+        }
+
+        // Find or create today's attendance for this user and device
         $attendance = Attendance::firstOrCreate(
-            ['user_id' => $user->id, 'date' => $today],
+            [
+                'user_id' => $user->id, 
+                'date' => $today,
+                'device_id' => $deviceId
+            ],
             [
                 'status' => 'Hadir',
                 'location_type' => $location,
+                'device_fingerprint' => $deviceFingerprint,
+                'last_activity_at' => now(),
             ]
         );
 
@@ -60,8 +116,13 @@ class AttendanceSyncController extends Controller
         if (!$attendance->time_in) {
             $attendance->time_in = $this->resolveClientDateTime($request->input('client_time'), $tz);
         }
-        // Always set/update location type based on current request context
+        
+        // Always update device tracking and location
+        $attendance->device_id = $deviceId;
+        $attendance->device_fingerprint = $deviceFingerprint;
         $attendance->location_type = $location;
+        $attendance->last_activity_at = now();
+        
         // Ensure status is set
         if (!$attendance->status) {
             $attendance->status = 'Hadir';
@@ -73,6 +134,7 @@ class AttendanceSyncController extends Controller
             'message' => 'Check-in recorded',
             'attendance_id' => $attendance->id,
             'time_in' => optional($attendance->time_in)->format('H:i:s'),
+            'device_id' => $deviceId,
         ]);
     }
 

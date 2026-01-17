@@ -160,6 +160,20 @@
             <!-- Camera Capture Section -->
             <div class="camera-section">
                 <h2>Ambil Foto Presensi <span class="required-asterisk" aria-hidden="true">*</span></h2>
+                
+                <!-- Camera Selection -->
+                <div class="camera-selection" style="margin-bottom: 15px;">
+                    <label for="cameraSelect" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Pilih Kamera:</label>
+                    <select id="cameraSelect" onchange="switchCamera()" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: white;">
+                        <option value="">-- Pilih Kamera --</option>
+                        <option value="user">📱 Kamera Depan (Selfie)</option>
+                        <option value="environment">📷 Kamera Belakang</option>
+                    </select>
+                    <small style="color: #6b7280; font-size: 12px; margin-top: 5px; display: block;">
+                        💡 Kamera akan terdeteksi otomatis saat halaman dimuat
+                    </small>
+                </div>
+                
                 <div class="camera-card">
                     <!-- Camera Preview -->
                     <div class="camera-preview" id="cameraPreview" style="display: none;">
@@ -364,8 +378,6 @@ let currentLocation = null;
 let uploadedPhoto = null;
 let activityDescription = '';
 let proofUploaded = false;
-let currentLat = null;
-let currentLng = null;
 let currentAccuracy = null;
 
 function tryUploadProofIfReady() {
@@ -377,10 +389,6 @@ function tryUploadProofIfReady() {
     fd.append('photo', file);
     fd.append('location_text', currentLocation);
     fd.append('location_type', 'luar_kantor');
-    if (currentLat != null && currentLng != null) {
-        fd.append('lat', currentLat);
-        fd.append('lng', currentLng);
-    }
     if (currentAccuracy != null) {
         fd.append('accuracy', currentAccuracy);
     }
@@ -799,6 +807,107 @@ function closeModal() {
 // Camera Functions
 let cameraStream = null;
 let currentZoom = 1;
+let currentCamera = 'environment'; // Default to back camera
+
+// Switch camera function
+function switchCamera() {
+    const cameraSelect = document.getElementById('cameraSelect');
+    currentCamera = cameraSelect.value;
+    
+    // Stop current camera if running
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+    
+    // If camera is running, restart with new selection
+    const cameraPreview = document.getElementById('cameraPreview');
+    if (cameraPreview && cameraPreview.style.display === 'block') {
+        startCamera();
+    }
+}
+
+// Detect available cameras and populate dropdown
+async function detectCameras() {
+    try {
+        // Check if mediaDevices is available
+        if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+            console.warn('Camera enumeration not supported');
+            return;
+        }
+
+        // Request permission first if needed
+        await navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                // Stop the stream immediately after getting permission
+                stream.getTracks().forEach(track => track.stop());
+            })
+            .catch(err => {
+                console.log('Camera permission denied or error:', err);
+                return;
+            });
+
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        const cameraSelect = document.getElementById('cameraSelect');
+        
+        if (!cameraSelect) {
+            console.warn('Camera select dropdown not found');
+            return;
+        }
+        
+        if (videoDevices.length > 0) {
+            // Clear existing options
+            cameraSelect.innerHTML = '<option value="">-- Pilih Kamera --</option>';
+            
+            // Add cameras to dropdown
+            videoDevices.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                
+                // Try to identify camera type
+                const label = device.label || `Kamera ${index + 1}`;
+                if (label.toLowerCase().includes('front') || label.toLowerCase().includes('depan')) {
+                    option.text = '📱 ' + label;
+                } else if (label.toLowerCase().includes('back') || label.toLowerCase().includes('belakang')) {
+                    option.text = '📷 ' + label;
+                } else {
+                    option.text = '📹 ' + label;
+                }
+                
+                cameraSelect.appendChild(option);
+            });
+            
+            // Auto-select back camera if available
+            const backCamera = videoDevices.find(device => 
+                device.label && (
+                    device.label.toLowerCase().includes('back') || 
+                    device.label.toLowerCase().includes('belakang')
+                )
+            );
+            
+            if (backCamera) {
+                cameraSelect.value = backCamera.deviceId;
+                currentCamera = backCamera.deviceId;
+            } else if (videoDevices.length > 0) {
+                // Select first camera as fallback
+                cameraSelect.value = videoDevices[0].deviceId;
+                currentCamera = videoDevices[0].deviceId;
+            }
+            
+            console.log(`Found ${videoDevices.length} camera(s)`);
+        } else {
+            console.warn('No cameras found');
+            cameraSelect.innerHTML = '<option value="">❌ Tidak ada kamera ditemukan</option>';
+        }
+    } catch (error) {
+        console.error('Error detecting cameras:', error);
+        const cameraSelect = document.getElementById('cameraSelect');
+        if (cameraSelect) {
+            cameraSelect.innerHTML = '<option value="">❌ Error mendeteksi kamera</option>';
+        }
+    }
+}
 
 function startCamera() {
     const cameraArea = document.getElementById('cameraArea');
@@ -824,15 +933,21 @@ function startCamera() {
         cameraBtn.classList.remove('completed');
     }
 
+    // Get selected camera or default to back camera
+    const cameraSelect = document.getElementById('cameraSelect');
+    const selectedCameraId = cameraSelect.value || currentCamera;
+    
     // Access camera with wider field of view and better quality
     const constraints = {
-        video: {
-            facingMode: 'environment', // Use back camera
-            width: { ideal: 1920, min: 1280 },
-            height: { ideal: 1080, min: 720 },
-            aspectRatio: { ideal: 16/9 },
-            frameRate: { ideal: 30, min: 15 }
-        }
+        video: selectedCameraId ? 
+            { deviceId: { exact: selectedCameraId } } : 
+            {
+                facingMode: 'environment', // Use back camera as fallback
+                width: { ideal: 1920, min: 1280 },
+                height: { ideal: 1080, min: 720 },
+                aspectRatio: { ideal: 16/9 },
+                frameRate: { ideal: 30, min: 15 }
+            }
     };
 
     // Try with high resolution first, fallback to lower if not supported
@@ -981,24 +1096,37 @@ function getCurrentLocation() {
 
         navigator.geolocation.getCurrentPosition(
             function(position) {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
                 const acc = position.coords.accuracy;
-                currentLat = lat;
-                currentLng = lng;
                 currentAccuracy = acc;
 
-                // Reverse geocode via backend (Google Maps)
-                fetch(`{{ route('reverse.geocode') }}?lat=${lat}&lng=${lng}`)
-                    .then(r => r.ok ? r.json() : Promise.reject())
+                // Reverse geocode via backend (OpenStreetMap - FREE)
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                console.log('Getting address for:', lat, lng);
+                fetch(`{{ route('free.reverse.geocode') }}?lat=${lat}&lng=${lng}`)
+                    .then(r => {
+                        console.log('Response status:', r.status);
+                        if (!r.ok) {
+                            throw new Error(`HTTP ${r.status}`);
+                        }
+                        return r.json();
+                    })
                     .then(data => {
-                        const address = (data && data.address) ? data.address : `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+                        console.log('Response data:', data);
+                        let address;
+                        if (data && data.address) {
+                            address = data.address;
+                        } else {
+                            // Fallback to coordinates if geocoding fails
+                            address = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+                        }
                         currentLocation = address;
                         locationText.textContent = address;
                         locationInput.value = address;
                         tryUploadProofIfReady();
                     })
-                    .catch(() => {
+                    .catch(error => {
+                        console.error('Geocoding error:', error);
                         const fallbackLocation = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
                         currentLocation = fallbackLocation;
                         locationText.textContent = fallbackLocation;
@@ -1046,10 +1174,6 @@ function saveActivity() {
     fd.append('location_type', 'luar_kantor');
     fd.append('activity_text', activityDescription.trim());
     if (currentLocation) fd.append('location_text', currentLocation);
-    if (currentLat != null && currentLng != null) {
-        fd.append('lat', currentLat);
-        fd.append('lng', currentLng);
-    }
     if (currentAccuracy != null) {
         fd.append('accuracy', currentAccuracy);
     }
@@ -1073,12 +1197,8 @@ function getLocationWithTimeout(timeout = 5000) {
         };
 
         const success = (position) => {
-            currentLocation = {
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-                accuracy: position.coords.accuracy
-            };
-            resolve(currentLocation);
+            currentAccuracy = position.coords.accuracy;
+            resolve(position);
         };
 
         const error = (err) => {
@@ -1216,5 +1336,51 @@ function updateBadge(items){
     if(backdrop) backdrop.addEventListener('click', close);
 })();
 </script>
-</body>
-</html>
+
+<script>
+// Initialize camera detection when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Add delay to ensure all elements are loaded
+    setTimeout(() => {
+        detectCameras().catch(error => {
+            console.error('Camera detection failed:', error);
+        });
+    }, 1000);
+});
+
+// Also detect cameras when user grants permission
+if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+    navigator.mediaDevices.addEventListener('devicechange', function() {
+        console.log('Camera devices changed');
+        setTimeout(() => {
+            detectCameras().catch(error => {
+                console.error('Camera detection failed:', error);
+            });
+        }, 500);
+    });
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    // Clean up camera stream
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+    
+    // Clean up intervals
+    Object.keys(liveTimers).forEach(timerId => {
+        clearInterval(liveTimers[timerId]);
+    });
+    
+    if (breakInterval) {
+        clearInterval(breakInterval);
+        breakInterval = null;
+    }
+    
+    if (notifTimer) {
+        clearInterval(notifTimer);
+        notifTimer = null;
+    }
+});
+</script>

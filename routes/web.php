@@ -83,6 +83,9 @@ Route::middleware(['auth','idle'])->group(function () {
 
     // Reverse geocoding (server-side via Google Maps)
     Route::get('/api/reverse-geocode', [ReverseGeocodeController::class, 'lookup'])->name('reverse.geocode');
+    
+    // Free reverse geocoding (OpenStreetMap/Nominatim)
+    Route::get('/api/free-reverse-geocode', [FreeGeocodeController::class, 'lookup'])->name('free.reverse.geocode');
 
     // User complaints: submit pengaduan masalah (DB)
     Route::post('/complaints', [UserComplaintController::class, 'store'])->name('user.complaints.submit');

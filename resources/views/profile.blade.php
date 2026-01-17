@@ -14,9 +14,9 @@
 <div class="main-container">
     <div class="sidebar">
         <div>
-            <div class="logo">
+            <a href="/dashboard" class="logo">
                 <img src="{{ asset('images/logo2.png') }}" alt="Life Media Logo">
-            </div>
+            </a>
             <div class="menu">
                 <div class="menu-title">MAIN MENU</div>
                 <ul>
@@ -38,16 +38,24 @@
             </div>
         </div>
         <div class="logout">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
-            Logout
+            <form method="POST" action="{{ route('logout') }}" style="display:flex;align-items:center;gap:8px;" onsubmit="console.log('Logout form submitted');">
+                @csrf
+                <button type="submit" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:inherit;cursor:pointer;padding:0;">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
+                    Logout
+                </button>
+            </form>
         </div>
     </div>
     <div class="content-area">
         <div class="header">
             <div class="header-left">
-                <div class="header-logo">
+                <button class="mobile-menu-btn" id="uMobileMenuBtn" aria-label="Buka menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <a href="/dashboard" class="header-logo">
                     <img src="{{ asset('images/logo2.png') }}" alt="Life Media Logo">
-                </div>
+                </a>
             </div>
             <div class="header-icons">
                 <div id="notifWrapper" style="position:relative;display:inline-block;">
@@ -63,6 +71,49 @@
                 <a href="/profile">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a7.5 7.5 0 0 1 13 0"/></svg>
                 </a>
+            </div>
+        </div>
+        <div class="mobile-drawer" id="uMobileDrawer" aria-hidden="true">
+            <div class="drawer-backdrop" id="uDrawerBackdrop"></div>
+            <div class="drawer-panel">
+                <button class="drawer-close" id="uDrawerClose" aria-label="Tutup menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                <div class="sidebar">
+                    <div>
+                        <a href="/dashboard" class="logo">
+                            <img src="{{ asset('images/logo2.png') }}" alt="Life Media Logo">
+                        </a>
+                        <div class="menu">
+                            <div class="menu-title">MAIN MENU</div>
+                            <ul>
+                                <li><a href="/dashboard"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>Dashboard</a></li>
+                                <li class="presensi-menu">
+                                    <a href="javascript:void(0)" onclick="togglePresensiDropdown(event)">
+                                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                                        Presensi
+                                        <svg class="dropdown-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
+                                    </a>
+                                    <ul class="submenu" id="presensi-submenu">
+                                        <li><a href="/presensi/kantor">Kantor</a></li>
+                                        <li><a href="/presensi/luar-kantor">Luar Kantor</a></li>
+                                    </ul>
+                                </li>
+                                <li><a href="/lembur"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Lembur</a></li>
+                                <li><a href="/rekap-keseluruhan"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Rekap Keseluruhan</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="logout">
+                        <form method="POST" action="{{ route('logout') }}" style="display:flex;align-items:center;gap:8px;" onsubmit="console.log('Logout form submitted');">
+                            @csrf
+                            <button type="submit" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:inherit;cursor:pointer;padding:0;">
+                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
+                                Logout
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
 <div class="profile-content">
@@ -384,6 +435,32 @@ document.getElementById('profileForm').addEventListener('submit', function(e) {
     e.preventDefault();
     saveProfile();
 });
+
+// Mobile drawer functionality
+(function(){
+    const drawer = document.getElementById('uMobileDrawer');
+    const openBtn = document.getElementById('uMobileMenuBtn');
+    const closeBtn = document.getElementById('uDrawerClose');
+    const backdrop = document.getElementById('uDrawerBackdrop');
+    
+    function open(){ 
+        if(drawer){ 
+            drawer.classList.add('open'); 
+            document.body.style.overflow='hidden'; 
+        } 
+    }
+    
+    function close(){ 
+        if(drawer){ 
+            drawer.classList.remove('open'); 
+            document.body.style.overflow=''; 
+        } 
+    }
+    
+    if(openBtn) openBtn.addEventListener('click', open);
+    if(closeBtn) closeBtn.addEventListener('click', close);
+    if(backdrop) backdrop.addEventListener('click', close);
+})();
 </script>
 </body>
 </html>
