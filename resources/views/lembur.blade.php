@@ -22,6 +22,10 @@
         /* Pastikan svg tidak membesar di luar container */
         .camera-section svg{ max-width:100%; max-height:100%; }
         .required-asterisk{ color:#e11d48; }
+        .status-alert{display:none;margin-top:14px;padding:14px;border-radius:14px;background:#fff7ed;border:1px solid #fdba74;color:#b45309;font-weight:600;align-items:flex-start;gap:12px;}
+        .status-alert svg{flex-shrink:0;color:#f97316;width:28px;height:28px;}
+        .status-alert .status-desc{font-size:0.9rem;font-weight:500;color:#92400e;margin-top:4px;}
+        .status-alert.show{display:flex;}
     </style>
 </head>
 <body>
@@ -48,17 +52,17 @@
                     </li>
                     <li><a href="/lembur" class="active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Lembur</a></li>
                     <li><a href="/rekap-keseluruhan"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Rekap Keseluruhan</a></li>
+                    <div class="logout" style="margin:16px 0 0 0;">
+                        <form method="POST" action="{{ route('logout') }}" style="display:flex;align-items:center;gap:8px;">
+                            @csrf
+                            <button type="submit" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:inherit;cursor:pointer;">
+                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
+                                Logout
+                            </button>
+                        </form>
+                    </div>
                 </ul>
             </div>
-        </div>
-        <div class="logout">
-            <form method="POST" action="{{ route('logout') }}" style="display:flex;align-items:center;gap:8px;">
-                @csrf
-                <button type="submit" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:inherit;cursor:pointer;">
-                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
-                    Logout
-                </button>
-            </form>
         </div>
     </div>
     <div class="content-area">
@@ -115,17 +119,17 @@
                                 </li>
                                 <li><a href="/lembur" class="active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Lembur</a></li>
                                 <li><a href="/rekap-keseluruhan"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Rekap Keseluruhan</a></li>
+                                <div class="logout" style="margin:16px 0 0 0;">
+                                    <form method="POST" action="{{ route('logout') }}" style="display:flex;align-items:center;gap:8px;">
+                                        @csrf
+                                        <button type="submit" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:inherit;cursor:pointer;">
+                                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
+                                            Logout
+                                        </button>
+                                    </form>
+                                </div>
                             </ul>
                         </div>
-                    </div>
-                    <div class="logout">
-                        <form method="POST" action="{{ route('logout') }}" style="display:flex;align-items:center;gap:8px;">
-                            @csrf
-                            <button type="submit" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:inherit;cursor:pointer;">
-                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
-                                Logout
-                            </button>
-                        </form>
                     </div>
                 </div>
             </div>
@@ -134,13 +138,27 @@
             <div class="page-title">
                 <h1>Lembur</h1>
             </div>
+            <div id="pendingStatusBox" class="status-alert" role="status" aria-live="polite">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 6v6l4 2"/>
+                </svg>
+                <div>
+                    <div>Pengajuan lembur sedang menunggu persetujuan</div>
+                    <div class="status-desc">Admin akan meninjau permintaan Anda. Status akan diperbarui setelah ada keputusan.</div>
+                </div>
+            </div>
             <div class="lembur-form">
                 <form id="lemburForm">
                     <!-- Nama dan Alamat Row -->
                     <div class="form-row">
                         <div class="form-group">
                             <label for="nama">Nama</label>
-                            <input type="text" id="nama" name="nama" placeholder="Masukkan nama lengkap">
+                            <input type="text"
+                                   id="nama"
+                                   name="nama"
+                                   placeholder="Masukkan nama lengkap"
+                                   value="{{ auth()->user()->name ?? '' }}">
                         </div>
                         <div class="form-group">
                             <label for="alamat" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
@@ -594,11 +612,19 @@ document.getElementById('lemburForm').addEventListener('submit', function(e) {
         return res.json();
     }).then(()=>{
         alert('Pengajuan lembur berhasil dikirim ke admin.');
+        showPendingStatus();
         resetForm();
     }).catch((err)=>{
         alert('Gagal mengirim pengajuan lembur. '+ (err && err.message ? err.message : 'Pastikan Jam, Deskripsi, dan kedua foto sudah diambil.'));
     });
 });
+
+function showPendingStatus(){
+    const box=document.getElementById('pendingStatusBox');
+    if(box){
+        box.classList.add('show');
+    }
+}
 
 // Reset form
 function resetForm() {

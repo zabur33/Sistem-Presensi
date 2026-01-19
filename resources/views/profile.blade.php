@@ -34,17 +34,17 @@
                     </li>
                     <li><a href="/lembur"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Lembur</a></li>
                     <li><a href="/rekap-keseluruhan"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Rekap Keseluruhan</a></li>
+                    <div class="logout" style="margin:16px 0 0 0;">
+                        <form method="POST" action="{{ route('logout') }}" style="display:flex;align-items:center;gap:8px;" onsubmit="console.log('Logout form submitted');">
+                            @csrf
+                            <button type="submit" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:inherit;cursor:pointer;padding:0;">
+                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
+                                Logout
+                            </button>
+                        </form>
+                    </div>
                 </ul>
             </div>
-        </div>
-        <div class="logout">
-            <form method="POST" action="{{ route('logout') }}" style="display:flex;align-items:center;gap:8px;" onsubmit="console.log('Logout form submitted');">
-                @csrf
-                <button type="submit" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:inherit;cursor:pointer;padding:0;">
-                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
-                    Logout
-                </button>
-            </form>
         </div>
     </div>
     <div class="content-area">
@@ -101,17 +101,17 @@
                                 </li>
                                 <li><a href="/lembur"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Lembur</a></li>
                                 <li><a href="/rekap-keseluruhan"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Rekap Keseluruhan</a></li>
+                                <div class="logout" style="margin:16px 0 0 0;">
+                                    <form method="POST" action="{{ route('logout') }}" style="display:flex;align-items:center;gap:8px;" onsubmit="console.log('Logout form submitted');">
+                                        @csrf
+                                        <button type="submit" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:inherit;cursor:pointer;padding:0;">
+                                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a 2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
+                                            Logout
+                                        </button>
+                                    </form>
+                                </div>
                             </ul>
                         </div>
-                    </div>
-                    <div class="logout">
-                        <form method="POST" action="{{ route('logout') }}" style="display:flex;align-items:center;gap:8px;" onsubmit="console.log('Logout form submitted');">
-                            @csrf
-                            <button type="submit" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:inherit;cursor:pointer;padding:0;">
-                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
-                                Logout
-                            </button>
-                        </form>
                     </div>
                 </div>
             </div>
