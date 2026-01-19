@@ -112,8 +112,8 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="confirmPassword">Confirm Password</label>
-                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
+                            <label for="password_confirmation">Confirm Password</label>
+                            <input type="password" id="password_confirmation" name="password_confirmation" placeholder="Confirm new password">
                         </div>
 
                         <div class="form-group">

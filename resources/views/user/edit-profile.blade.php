@@ -41,8 +41,8 @@
                     <input type="password" id="password" name="password" placeholder="Enter new password (leave blank to keep current)">
                 </div>
                 <div class="form-group">
-                    <label for="confirmPassword">Confirm Password</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
+                    <label for="password_confirmation">Confirm Password</label>
+                    <input type="password" id="password_confirmation" name="password_confirmation" placeholder="Confirm new password">
                 </div>
                 <div class="form-group">
                     <label for="phone">Phone Number</label>
@@ -105,7 +105,7 @@ function validateForm(){
     const name = document.getElementById('name').value.trim();
     const email = document.getElementById('email').value.trim();
     const pw = document.getElementById('password').value;
-    const pwc = document.getElementById('confirmPassword').value;
+    const pwc = document.getElementById('password_confirmation').value;
     if(!name){ alert('Name is required'); return false; }
     if(!email || !isValidEmail(email)){ alert('Please enter a valid email'); return false; }
     if(pw && pw !== pwc){ alert('Password and confirm password do not match'); return false; }
