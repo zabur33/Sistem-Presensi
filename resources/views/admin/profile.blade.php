@@ -6,8 +6,15 @@
     <p style="color:#7a7a7a; margin-top:6px;">Perbarui data profil dan kata sandi.</p>
     </div>
 
+@if($errors->any())
+    <div style="margin-bottom:16px;padding:14px 16px;border-radius:14px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-weight:600;display:flex;gap:10px;align-items:center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <span>{{ $errors->first() ?? 'Terjadi kesalahan. Periksa kembali input Anda.' }}</span>
+    </div>
+@endif
+
 <div class="card" style="background:#f4e9e4; border:1px solid #d9c7bf; border-radius:18px; padding:24px; box-shadow:0 1px 0 rgba(0,0,0,0.02); max-width:980px;">
-    <form method="POST" action="{{ route('admin.profile.update') }}" enctype="multipart/form-data" style="display:grid; grid-template-columns: 1fr 1fr; gap:18px;">
+    <form id="adminProfileForm" method="POST" action="{{ route('admin.profile.update') }}" enctype="multipart/form-data" style="display:grid; grid-template-columns: 1fr 1fr; gap:18px;">
         @csrf
         <div style="grid-column: span 2; display:flex; align-items:center; gap:14px;">
             <div style="width:56px;height:56px;border-radius:50%;background:#c04d5b;display:flex;align-items:center;justify-content:center;color:#fff;">
@@ -106,7 +113,23 @@
 // success popup
 (function(){
   const msg = @json(session('success'));
+  const errMsg = @json(session('error'));
   if(msg){ Swal.fire({title:'Berhasil!', text: msg, icon:'success', confirmButtonColor:'#b34555'}); }
+  if(errMsg){ Swal.fire({title:'Gagal!', text: errMsg, icon:'error', confirmButtonColor:'#b34555'}); }
+})();
+
+// client-side password confirmation check
+(function(){
+    const form = document.getElementById('adminProfileForm');
+    if(!form) return;
+    form.addEventListener('submit', function(e){
+        const pw = form.querySelector('input[name="password"]');
+        const pwc = form.querySelector('input[name="password_confirmation"]');
+        if(pw && pwc && pw.value && pw.value !== pwc.value){
+            e.preventDefault();
+            Swal.fire({title:'Konfirmasi tidak cocok', text:'Pastikan Konfirmasi Password sama dengan Password Baru.', icon:'warning', confirmButtonColor:'#b34555'});
+        }
+    });
 })();
 </script>
 @endpush
