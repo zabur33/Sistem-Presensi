@@ -120,6 +120,17 @@
     <div class="page-title">
         <h1>Profile</h1>
     </div>
+    @if(session('success'))
+        <div style="margin:12px 0;padding:12px 16px;border-radius:12px;background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;font-weight:600;display:flex;gap:10px;align-items:center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+            <span>{{ session('success') }}</span>
+        </div>
+    @elseif(session('error'))
+        <div style="margin:12px 0;padding:12px 16px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-weight:600;display:flex;gap:10px;align-items:center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
 
     <div class="profile-container">
                 <!-- User Information Form -->

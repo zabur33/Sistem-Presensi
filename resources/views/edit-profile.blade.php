@@ -74,6 +74,21 @@
     <div class="page-title">
         <h1>Edit Profile</h1>
     </div>
+    @if(session('success') || session('error'))
+        <div style="margin-bottom:16px;position:relative;">
+            <div style="padding:14px 16px;border-radius:14px;display:flex;gap:10px;align-items:center;font-weight:600;
+                {{ session('success') ? 'background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;' : '' }}
+                {{ session('error') ? 'background:#fef2f2;border:1px solid #fecaca;color:#991b1b;' : '' }}">
+                @if(session('success'))
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                    <span>{{ session('success') }}</span>
+                @else
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <span>{{ session('error') }}</span>
+                @endif
+            </div>
+        </div>
+    @endif
 
     <div class="profile-container">
                 <!-- User Information Form -->
