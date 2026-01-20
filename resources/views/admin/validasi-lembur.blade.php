@@ -45,10 +45,6 @@
         .ot-item{display:flex;gap:10px;align-items:flex-start;padding:12px;border-top:1px solid #e5dedb}
         .ot-item:first-child{border-top:none}
         .user-ava{width:38px;height:38px;border-radius:50%;background:#fff;border:2px solid #e07a5f;display:flex;align-items:center;justify-content:center;color:#c04d5b;font-weight:800}
-        .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700}
-        .badge.pending{background:#fff0cc;color:#a05a00}
-        .badge.approved{background:#e6f7ed;color:#0f8a4a}
-        .badge.rejected{background:#f7e6e6;color:#b34747}
         .btn{border:none;border-radius:8px;padding:6px 10px;font-size:12px;color:#fff;height:32px}
         .btn.read{background:#64748b}
         .btn.approve{background:#0f8a4a}
@@ -98,7 +94,6 @@
                     </div>
                 @endif
                 <div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                    <span class="badge {{ $it->status }}">{{ ucfirst($it->status) }}</span>
                     @if(!$it->read_at)
                         <form method="POST" action="{{ route('admin.overtime.read', $it->id) }}">
                             @csrf

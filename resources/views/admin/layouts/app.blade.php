@@ -116,16 +116,12 @@ function renderAdminComplaints(items){
         const name = (it.user_name || 'Pegawai');
         const time = (it.created_at||'').replace('T',' ').slice(0,16);
         const msg  = (it.message||'-');
-        const status = (it.status||'baru');
-        const color = status==='baru' ? '#1d4ed8' : '#065f46';
-        const badgeBg = status==='baru' ? '#dbeafe' : '#ecfdf5';
         return `<div style="padding:12px;border-bottom:1px solid #f3f4f6;">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
                 <div style="font-weight:700;color:#111827;">${name}</div>
                 <span style="font-size:11px;color:#6b7280;">${time}</span>
             </div>
             <div style="margin-top:6px;color:#374151;">${msg}</div>
-            <span style="margin-top:8px;display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;background:${badgeBg};color:${color};text-transform:capitalize">${status}</span>
         </div>`;
     }).join('');
 }
