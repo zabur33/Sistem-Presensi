@@ -15,21 +15,21 @@
         @csrf
 
         <div>
-            <label class="form-label">Nama</label>
+            <label class="form-label">Nama <span class="required-asterisk">*</span></label>
             <input class="form-input" type="text" name="name" placeholder="Nama lengkap" required>
         </div>
         <div>
-            <label class="form-label">Nomor Induk Pegawai</label>
-            <input class="form-input" type="text" name="nip" placeholder="NIP">
+            <label class="form-label">Nomor Induk Pegawai <span class="required-asterisk">*</span></label>
+            <input class="form-input" type="text" name="nip" placeholder="NIP" required>
         </div>
 
         <div>
-            <label class="form-label">Email</label>
-            <input class="form-input" type="email" name="email" placeholder="email@domain.com" required autocomplete="new-email">
+            <label class="form-label">Email <span class="required-asterisk">*</span></label>
+            <input class="form-input" type="email" name="email" placeholder="email@domain.com" required autocomplete="new-email" pattern="[^@\s]+@[^@\s]+\.[^@\s]+">
         </div>
         <div>
-            <label class="form-label">Jenis Kelamin</label>
-            <select class="form-input" name="gender">
+            <label class="form-label">Jenis Kelamin <span class="required-asterisk">*</span></label>
+            <select class="form-input" name="gender" required>
                 <option value="">Pilih</option>
                 <option value="L">Laki-laki</option>
                 <option value="P">Perempuan</option>
@@ -37,34 +37,34 @@
         </div>
 
         <div>
-            <label class="form-label">Tanggal Lahir</label>
-            <input class="form-input" type="date" name="birth_date">
+            <label class="form-label">Tanggal Lahir <span class="required-asterisk">*</span></label>
+            <input class="form-input" type="date" name="birth_date" required>
         </div>
         <div>
-            <label class="form-label">Alamat</label>
-            <input class="form-input" type="text" name="address" placeholder="Alamat lengkap">
+            <label class="form-label">Alamat <span class="required-asterisk">*</span></label>
+            <input class="form-input" type="text" name="address" placeholder="Alamat lengkap" required>
         </div>
 
         <div>
-            <label class="form-label">Jabatan</label>
-            <input class="form-input" type="text" name="position" placeholder="Contoh: Staff IT">
+            <label class="form-label">Jabatan <span class="required-asterisk">*</span></label>
+            <input class="form-input" type="text" name="position" placeholder="Contoh: Staff IT" required>
         </div>
         <div>
-            <label class="form-label">No. Telepon</label>
-            <input class="form-input" type="text" name="phone" placeholder="08xxxxxxxxxx">
+            <label class="form-label">No. Telepon <span class="required-asterisk">*</span></label>
+            <input class="form-input" type="text" name="phone" placeholder="08xxxxxxxxxx" required inputmode="numeric" pattern="[0-9]+" title="Nomor telepon hanya boleh angka">
         </div>
 
         <div style="grid-column: span 2;">
-            <label class="form-label">Divisi</label>
-            <input class="form-input" type="text" name="division" placeholder="Contoh: Teknologi Informasi">
+            <label class="form-label">Divisi <span class="required-asterisk">*</span></label>
+            <input class="form-input" type="text" name="division" placeholder="Contoh: Teknologi Informasi" required>
         </div>
 
         <div>
-            <label class="form-label">Password Awal</label>
+            <label class="form-label">Password Awal <span class="required-asterisk">*</span></label>
             <input class="form-input" type="password" name="password" placeholder="Password awal" required autocomplete="new-password">
         </div>
         <div>
-            <label class="form-label">Konfirmasi Password</label>
+            <label class="form-label">Konfirmasi Password <span class="required-asterisk">*</span></label>
             <input class="form-input" type="password" name="password_confirmation" placeholder="Ulangi password" required autocomplete="new-password">
         </div>
 
@@ -83,6 +83,7 @@
     .form-label { display:block; margin-bottom:6px; font-weight:600; color:#5b4e48; }
     .form-input { width:100%; background:#fff; border:1px solid #d9c7bf; border-radius:10px; padding:10px 12px; outline:none; box-shadow:inset 0 1px 0 rgba(0,0,0,0.02); }
     .form-input:focus { border-color:#e07a5f; box-shadow:0 0 0 3px rgba(224,122,95,0.15); }
+    .required-asterisk{color:#e11d48;margin-left:4px;font-weight:700;}
     @media (max-width: 900px){
         .card form{ grid-template-columns:1fr; }
     }
@@ -116,6 +117,7 @@
         const formData = new FormData(form);
         const name = (formData.get('name')||'').trim();
         const email = (formData.get('email')||'').trim();
+        const phone = (formData.get('phone')||'').trim();
         const pwd = (formData.get('password')||'').toString();
         const pwdc = (formData.get('password_confirmation')||'').toString();
         const bd = (formData.get('birth_date')||'').toString();
@@ -124,6 +126,11 @@
         const problems = [];
         if(!name) problems.push('Nama wajib diisi.');
         if(!email) problems.push('Email wajib diisi.');
+        if(!phone) {
+            problems.push('Nomor telepon wajib diisi.');
+        } else if(!/^\d+$/.test(phone)) {
+            problems.push('Nomor telepon hanya boleh angka.');
+        }
         if(!pwd) problems.push('Password wajib diisi.');
         if(pwd && pwd.length < 6) problems.push('Password minimal 6 karakter.');
         if(pwd && pwdc && pwd !== pwdc) problems.push('Konfirmasi password tidak sama.');

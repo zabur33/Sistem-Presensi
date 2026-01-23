@@ -14,27 +14,42 @@ class ProfileController extends Controller
     {
         try {
             $user = Auth::user();
+            
+            // Admin update route: lock every field except password
+            if ($request->routeIs('admin.profile.update')) {
+                $validated = $request->validate([
+                    'password' => ['required','confirmed','min:6'],
+                ], [
+                    'password.required' => 'Password baru wajib diisi.',
+                    'password.confirmed' => 'Konfirmasi password tidak sama.',
+                    'password.min' => 'Password minimal :min karakter.',
+                ]);
+
+                $user->password = Hash::make($validated['password']);
+                $user->save();
+
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => true, 'message' => 'Password berhasil diperbarui']);
+                }
+
+                return redirect()->route('admin.profile')->with('success', 'Password berhasil diperbarui');
+            }
+
             $employee = $user->employee; // may be null if not created yet
 
-            // Validate optional updates
+            // Validate non-admin updates: only password & avatar allowed
             $validated = $request->validate([
-                'name' => ['nullable','string','max:255'],
-                'email' => ['nullable','email','max:255'],
                 'password' => ['nullable','confirmed','min:6'],
-                'gender' => ['nullable','in:L,P'],
-                'birth_date' => ['nullable','date','before_or_equal:today'],
-                'address' => ['nullable','string','max:255'],
-                'phone' => ['nullable','string','max:50'],
-                'position' => ['nullable','string','max:100'],
-                'division' => ['nullable','string','max:100'],
+                'avatar' => ['nullable','image','max:2048'],
+            ], [
+                'password.confirmed' => 'Konfirmasi password tidak sama.',
+                'password.min' => 'Password minimal :min karakter.',
+                'avatar.image' => 'Avatar harus berupa gambar yang valid.',
+                'avatar.max' => 'Ukuran avatar maksimal 2MB.',
             ]);
 
             // Ensure employee relation exists if admin/user starts filling employee fields
-            if (!$employee && (
-                $request->filled('gender') || $request->filled('birth_date') || $request->filled('address') ||
-                $request->filled('phone') || $request->filled('position') || $request->filled('division') ||
-                $request->hasFile('avatar')
-            )) {
+            if (!$employee && $request->hasFile('avatar')) {
                 $employee = new Employee();
                 $employee->user_id = $user->id;
                 $employee->active = true;
@@ -55,37 +70,11 @@ class ProfileController extends Controller
                 }
             }
 
-            // Optional: update simple fields if present (no validation for brevity)
-            if ($employee) {
-                $employee->gender = $validated['gender'] ?? $employee->gender;
-                $employee->birth_date = $validated['birth_date'] ?? $employee->birth_date;
-                $employee->address = $validated['address'] ?? $employee->address;
-                $employee->phone = $validated['phone'] ?? $employee->phone;
-                $employee->position = $validated['position'] ?? $employee->position;
-                $employee->division = $validated['division'] ?? $employee->division;
-                $employee->save();
-            }
-
-            // Name/email could also be updated
-            if (!empty($validated['name'])) {
-                $user->name = $validated['name'];
-            }
-            if (!empty($validated['email'])) {
-                $user->email = $validated['email'];
-            }
             if (!empty($validated['password'])) {
                 $user->password = Hash::make($validated['password']);
             }
             $user->save();
 
-            // Redirect back to the same profile page (admin scope)
-            if ($request->routeIs('admin.profile.update')) {
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json(['success' => true, 'message' => 'Profil berhasil diperbarui']);
-                }
-                return redirect()->route('admin.profile')->with('success', 'Profil berhasil diperbarui');
-            }
-            
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => true, 'message' => 'Profil berhasil diperbarui']);
             }

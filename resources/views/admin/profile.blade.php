@@ -3,7 +3,7 @@
 @section('content')
 <div class="page-title" style="margin-bottom:16px;">
     <h1 style="font-weight:800; font-size:28px;">Kelola Profil</h1>
-    <p style="color:#7a7a7a; margin-top:6px;">Perbarui data profil dan kata sandi.</p>
+    <p style="color:#7a7a7a; margin-top:6px;">Halaman ini dikunci untuk menjaga konsistensi data. Hanya kata sandi yang dapat diubah.</p>
     </div>
 
 @if($errors->any())
@@ -28,11 +28,11 @@
 
         <div>
             <label class="form-label">Nama</label>
-            <input class="form-input" type="text" name="name" placeholder="Nama lengkap" value="{{ old('name', auth()->user()->name ?? '') }}">
+            <input class="form-input" type="text" name="name" placeholder="Nama lengkap" value="{{ old('name', auth()->user()->name ?? '') }}" disabled>
         </div>
         <div>
             <label class="form-label">Email</label>
-            <input class="form-input" type="email" name="email" placeholder="email@domain.com" value="{{ old('email', auth()->user()->email ?? '') }}">
+            <input class="form-input" type="email" name="email" placeholder="email@domain.com" value="{{ old('email', auth()->user()->email ?? '') }}" disabled>
         </div>
 
         <div>
@@ -48,31 +48,31 @@
             <label class="form-label">Jenis Kelamin</label>
             @php($g = optional(auth()->user()->employee)->gender)
             <div style="display:flex; gap:14px; align-items:center;">
-                <label style="display:flex; align-items:center; gap:6px;"><input type="radio" name="gender" value="L" {{ $g==='L'?'checked':'' }}> Laki-laki</label>
-                <label style="display:flex; align-items:center; gap:6px;"><input type="radio" name="gender" value="P" {{ $g==='P'?'checked':'' }}> Perempuan</label>
+                <label style="display:flex; align-items:center; gap:6px;"><input type="radio" name="gender" value="L" {{ $g==='L'?'checked':'' }} disabled> Laki-laki</label>
+                <label style="display:flex; align-items:center; gap:6px;"><input type="radio" name="gender" value="P" {{ $g==='P'?'checked':'' }} disabled> Perempuan</label>
             </div>
         </div>
         <div>
             <label class="form-label">Tanggal Lahir</label>
-            <input id="birth_date" class="form-input" type="date" name="birth_date" value="{{ optional(auth()->user()->employee)->birth_date }}">
+            <input id="birth_date" class="form-input" type="date" name="birth_date" value="{{ optional(auth()->user()->employee)->birth_date }}" disabled>
         </div>
 
         <div>
             <label class="form-label">No. Telepon</label>
-            <input class="form-input" type="text" name="phone" placeholder="08xxxxxxxxxx" value="{{ optional(auth()->user()->employee)->phone }}">
+            <input class="form-input" type="text" name="phone" placeholder="08xxxxxxxxxx" value="{{ optional(auth()->user()->employee)->phone }}" disabled>
         </div>
         <div>
             <label class="form-label">Alamat</label>
-            <input class="form-input" type="text" name="address" placeholder="Alamat lengkap" value="{{ optional(auth()->user()->employee)->address }}">
+            <input class="form-input" type="text" name="address" placeholder="Alamat lengkap" value="{{ optional(auth()->user()->employee)->address }}" disabled>
         </div>
 
         <div>
             <label class="form-label">Jabatan</label>
-            <input class="form-input" type="text" name="position" placeholder="Contoh: Staff IT" value="{{ optional(auth()->user()->employee)->position }}">
+            <input class="form-input" type="text" name="position" placeholder="Contoh: Staff IT" value="{{ optional(auth()->user()->employee)->position }}" disabled>
         </div>
         <div>
             <label class="form-label">Divisi</label>
-            <input class="form-input" type="text" name="division" placeholder="Contoh: Teknologi Informasi" value="{{ optional(auth()->user()->employee)->division }}">
+            <input class="form-input" type="text" name="division" placeholder="Contoh: Teknologi Informasi" value="{{ optional(auth()->user()->employee)->division }}" disabled>
         </div>
         <div style="grid-column: span 2; display:flex; justify-content:flex-end; margin-top:8px; gap:10px;">
             <button type="reset" style="background:#e7e0dc;color:#5b4e48;border:none;padding:10px 18px;border-radius:10px;">Batal</button>

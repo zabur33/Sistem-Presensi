@@ -95,28 +95,29 @@
                 <div class="profile-form-section">
                     <div class="section-header">
                         <h2>User Information</h2>
+                        <p style="margin-top:6px;color:#6b7280;font-size:14px;">Data identitas dikunci oleh sistem. Anda hanya dapat mengganti kata sandi dan foto profil.</p>
                     </div>
 
                     <form id="editProfileForm" class="profile-form" action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="form-group">
                             <label for="name">Name*</label>
-                            <input type="text" id="name" name="name" value="{{ auth()->user()->name ?? '' }}" required>
+                            <input type="text" id="name" name="name" value="{{ auth()->user()->name ?? '' }}" disabled>
                         </div>
 
                         <div class="form-group">
                             <label for="email">Email Address*</label>
-                            <input type="email" id="email" name="email" value="{{ auth()->user()->email ?? '' }}" required>
+                            <input type="email" id="email" name="email" value="{{ auth()->user()->email ?? '' }}" disabled>
                         </div>
 
                         <div class="form-group">
                             <label>Jenis Kelamin</label>
                             <div style="display:flex; gap:16px; align-items:center;">
                                 <label style="display:flex; align-items:center; gap:6px;">
-                                    <input type="radio" name="gender" value="L" {{ (optional(auth()->user()->employee)->gender ?? '')==='L' ? 'checked' : '' }}> Laki-laki
+                                    <input type="radio" name="gender" value="L" {{ (optional(auth()->user()->employee)->gender ?? '')==='L' ? 'checked' : '' }} disabled> Laki-laki
                                 </label>
                                 <label style="display:flex; align-items:center; gap:6px;">
-                                    <input type="radio" name="gender" value="P" {{ (optional(auth()->user()->employee)->gender ?? '')==='P' ? 'checked' : '' }}> Perempuan
+                                    <input type="radio" name="gender" value="P" {{ (optional(auth()->user()->employee)->gender ?? '')==='P' ? 'checked' : '' }} disabled> Perempuan
                                 </label>
                             </div>
                         </div>
@@ -133,12 +134,12 @@
 
                         <div class="form-group">
                             <label for="phone">Phone Number</label>
-                            <input type="tel" id="phone" name="phone" value="{{ optional(auth()->user()->employee)->phone ?? '' }}" placeholder="Enter phone number">
+                            <input type="tel" id="phone" name="phone" value="{{ optional(auth()->user()->employee)->phone ?? '' }}" placeholder="Enter phone number" disabled>
                         </div>
 
                         <div class="form-group">
                             <label for="position">Position</label>
-                            <input type="text" id="position" name="position" value="{{ optional(auth()->user()->employee)->position ?? '' }}" placeholder="Enter position">
+                            <input type="text" id="position" name="position" value="{{ optional(auth()->user()->employee)->position ?? '' }}" placeholder="Enter position" disabled>
                         </div>
 
                         <div class="form-actions">
@@ -229,12 +230,7 @@
 
 <script>
 // Store original values for comparison
-let originalValues = {!! json_encode([
-    'name' => auth()->user()->name ?? '',
-    'email' => auth()->user()->email ?? '',
-    'phone' => optional(auth()->user()->employee)->phone ?? '',
-    'position' => optional(auth()->user()->employee)->position ?? '',
-]) !!};
+let originalValues = { password: '', password_confirmation: '', avatar: '' };
 
 // Dropdown functionality
 function togglePresensiDropdown(event) {
@@ -332,23 +328,10 @@ document.querySelector('.profile-picture').addEventListener('click', function() 
 
 // Check if form has changes
 function hasChanges() {
-    const currentValues = {
-        name: document.getElementById('name').value,
-        email: document.getElementById('email').value,
-        phone: document.getElementById('phone').value,
-        position: document.getElementById('position').value,
-        password: document.getElementById('password').value,
-        confirmPassword: document.getElementById('confirmPassword').value
-    };
-
-    return (
-        currentValues.name !== originalValues.name ||
-        currentValues.email !== originalValues.email ||
-        currentValues.phone !== originalValues.phone ||
-        currentValues.position !== originalValues.position ||
-        currentValues.password !== '' ||
-        currentValues.confirmPassword !== ''
-    );
+    const password = document.getElementById('password').value;
+    const passwordConfirmation = document.getElementById('password_confirmation').value;
+    const avatar = document.getElementById('profileImageInput').value;
+    return password !== '' || passwordConfirmation !== '' || avatar !== '';
 }
 
 // Cancel edit with confirmation if changes exist
@@ -379,25 +362,8 @@ function confirmCancel() {
 
 // Form validation
 function validateForm() {
-    const name = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-
-    if (!name) {
-        alert('Name is required');
-        return false;
-    }
-
-    if (!email) {
-        alert('Email is required');
-        return false;
-    }
-
-    if (!isValidEmail(email)) {
-        alert('Please enter a valid email address');
-        return false;
-    }
+    const confirmPassword = document.getElementById('password_confirmation').value;
 
     if (password && password !== confirmPassword) {
         alert('Password and confirm password do not match');
@@ -423,20 +389,8 @@ function saveProfile() {
         return;
     }
 
-    const formData = {
-        name: document.getElementById('name').value,
-        email: document.getElementById('email').value,
-        phone: document.getElementById('phone').value,
-        position: document.getElementById('position').value,
-        password: document.getElementById('password').value
-    };
-
-    // Update profile display
-    document.getElementById('profileName').textContent = formData.name;
-    document.getElementById('profileRole').textContent = formData.position;
-
-    // Show success modal
-    document.getElementById('successModal').style.display = 'flex';
+    // Submit form normally
+    document.getElementById('editProfileForm').submit();
 }
 
 // Redirect to profile page after success

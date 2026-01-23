@@ -20,15 +20,15 @@ class EmployeeRegistrationController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required','string','max:255'],
-            'email' => ['required','email','max:255', Rule::unique('users','email')],
+            'email' => ['required','email:rfc,dns','max:255', Rule::unique('users','email')],
             'password' => ['required','confirmed','min:6'],
-            'nip' => ['nullable','string','max:50', Rule::unique('employees','nip')],
-            'gender' => ['nullable','in:L,P'],
-            'birth_date' => ['nullable','date','before_or_equal:today'],
-            'address' => ['nullable','string','max:255'],
-            'position' => ['nullable','string','max:100'],
-            'phone' => ['nullable','string','max:50'],
-            'division' => ['nullable','string','max:100'],
+            'nip' => ['required','string','max:50', Rule::unique('employees','nip')],
+            'gender' => ['required','in:L,P'],
+            'birth_date' => ['required','date','before_or_equal:today'],
+            'address' => ['required','string','max:255'],
+            'position' => ['required','string','max:100'],
+            'phone' => ['required','string','max:50','regex:/^\d+$/'],
+            'division' => ['required','string','max:100'],
             'is_admin' => ['nullable','boolean'],
         ], [
             'email.unique' => 'Email sudah terdaftar. Gunakan email lain.',
@@ -39,6 +39,15 @@ class EmployeeRegistrationController extends Controller
             'name.required' => 'Nama wajib diisi.',
             'email.required' => 'Email wajib diisi.',
             'password.required' => 'Password wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'nip.required' => 'NIP wajib diisi.',
+            'gender.required' => 'Jenis kelamin wajib dipilih.',
+            'birth_date.required' => 'Tanggal lahir wajib diisi.',
+            'address.required' => 'Alamat wajib diisi.',
+            'position.required' => 'Jabatan wajib diisi.',
+            'phone.required' => 'Nomor telepon wajib diisi.',
+            'phone.regex' => 'Nomor telepon hanya boleh berisi angka.',
+            'division.required' => 'Divisi wajib diisi.',
         ]);
 
         $user = User::create([
@@ -50,10 +59,10 @@ class EmployeeRegistrationController extends Controller
 
         Employee::create([
             'user_id' => $user->id,
-            'nip' => $validated['nip'] ?? null,
-            'position' => $validated['position'] ?? null,
-            'division' => $validated['division'] ?? null,
-            'phone' => $validated['phone'] ?? null,
+            'nip' => $validated['nip'],
+            'position' => $validated['position'],
+            'division' => $validated['division'],
+            'phone' => $validated['phone'],
             'avatar_url' => null,
             'active' => true,
         ]);
